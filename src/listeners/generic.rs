@@ -18,7 +18,7 @@ impl Handler {
                         } 
                             
                         let rebuilt_url = format!("{}{}{}{}", spoiler_wrap, url_fix, post_fix.as_str(), spoiler_wrap);
-                        msg.channel_id.say(&ctx.http, &rebuilt_url).await.unwrap();
+                        msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
                     }
                     None => {}
                 }

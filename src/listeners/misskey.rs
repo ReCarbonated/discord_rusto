@@ -31,8 +31,7 @@ impl Handler {
                         Ok(res) => match &res.json::<Note>().await {
                             Ok(parsed) => {
                                 for file in &parsed.files {
-                                    msg.channel_id
-                                        .say(&ctx.http, file.url.clone())
+                                    msg.reply(&ctx.http, file.url.clone())
                                         .await
                                         .unwrap();
                                 }
