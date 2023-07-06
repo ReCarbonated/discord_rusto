@@ -1,0 +1,18 @@
+[package]
+name = "discord-bot-rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
+regex = "1"
+sqlx = { version = "0.6.3", features = [ "runtime-async-std-native-tls", "mysql", "chrono"] }
+dotenvy = "0.15.7"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0.166", features = ["derive"] }
+
+[dependencies.serenity]
+features = ["cache", "framework", "standard_framework", "rustls_backend", "utils", "model", "cache"]
+version = "0.11"
