@@ -27,10 +27,12 @@ struct File {
     url: String,
     #[serde(rename(deserialize = "type"))]
     file_type: String,
+    #[serde(rename(deserialize = "isSensitive"))]
+    is_nsfw: bool,
 }
 
 impl Handler {
-    pub async fn misskey_handler(&self, ctx: &Context, msg: &Message) {
+    pub async fn misskey_handler(&self, ctx: &Context,  msg: &Message) {
         match self.misskey_regex.captures(&msg.content) {
             Some(x) => match x.get(6) {
                 Some(note_id) => {
@@ -46,18 +48,22 @@ impl Handler {
                         Ok(res) => match &res.json::<Note>().await {
                             Ok(parsed) => {
                                 // Build iter of videos and images
-                                let mut videos = parsed
+                                let videos = parsed
                                     .files
                                     .iter()
-                                    .filter(|f| f.file_type.contains("video"));
-                                let mut images = parsed
+                                    .filter(|f| f.file_type.contains("video"))
+                                    .collect::<Vec<_>>();
+                                let images_list = parsed
                                     .files
                                     .iter()
-                                    .filter(|f| f.file_type.contains("image"));
+                                    .filter(|f| f.file_type.contains("image"))
+                                    .collect::<Vec<_>>();
+
+                                let mut images = images_list.iter();
 
                                 // Build peekables and check if contains any value
-                                let contains_video = videos.by_ref().peekable().peek().is_some();
-                                let contains_image = images.by_ref().peekable().peek().is_some();
+                                let contains_video = !videos.is_empty();
+                                let contains_image = !images_list.iter().filter(|f| f.is_nsfw).collect::<Vec<_>>().is_empty();
 
                                 // Shared res to prevent duplication
                                 let mut _res;
@@ -71,6 +77,14 @@ impl Handler {
 
                                 // If there's a value in image list, assume it's all images
                                 } else if contains_image {
+                                    let mut message = msg.clone();
+                                    match message.suppress_embeds(&ctx.http).await {
+                                        Ok(_) => {println!("Removed embed");},
+                                        Err(_) => {println!("Failed to remove, no perms");}
+                                    }
+
+
+
                                     // Build a message object to send to channel
                                     let _res = msg
                                         .channel_id
@@ -89,8 +103,14 @@ impl Handler {
                                                 .timestamp(parsed.created_at.as_str());
 
                                                 // Error handling on next value
-                                                if let Some(image) = images.next() {
-                                                    e.image(image.url.clone());
+                                                match images.next() {
+                                                    Some(image) => {
+                                                        println!("{}", image.url);
+                                                        e.image(image.url.clone());
+                                                    }
+                                                    _ => {
+                                                        println!("huh");
+                                                    }
                                                 }
 
                                                 // Assign URL because discord groups via url
@@ -103,16 +123,17 @@ impl Handler {
                                             });
 
                                             // For any leftover images, append more embeds with same url as above
-                                            for file in images {
+                                            for image in images {
                                                 m.add_embed(|e| {
-                                                    e.image(file.url.clone()).url(format!(
+                                                    println!("{}", image.url);
+                                                    e.image(image.url.clone()).url(format!(
                                                         "https://misskey.io/notes/{}",
                                                         note_id.as_str()
                                                     ))
                                                 });
                                             }
                                             // Append reply to message
-                                            m.reference_message(msg);
+                                            m.reference_message((msg.channel_id, msg.id));
                                             m
                                         })
                                         .await;

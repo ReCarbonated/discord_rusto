@@ -26,4 +26,25 @@ impl Handler {
             None => {}
         }
     }
+
+    pub async fn print_status(&self, ctx: &Context, msg: &Message){
+        let lock = self.switches.lock().await;
+        let _ = msg.channel_id.send_message(&ctx.http, |m|
+            {
+                m.add_embed(|e| {
+                    e
+                    .field("twitter", lock.twitter_switch.to_string(), true)
+                    .field("insta", lock.insta_switch.to_string(), true)
+                    .field("tiktok", lock.tiktok_switch.to_string(), true)
+                    .field("misskey", lock.misskey_switch.to_string(), true)
+                    .field("pixiv", lock.pixiv_switch.to_string(), true)
+                })
+            }
+        
+        
+        
+        
+        ).await;
+
+    }
 }

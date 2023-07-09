@@ -1,5 +1,5 @@
 use serenity::{
-    prelude::Context,
+    client::Context,
     model::channel::Message,
     framework::standard::{Args, CommandResult},
 };

@@ -10,15 +10,20 @@ use listeners::{Handler, Switches};
 use commands::*;
 use helpers::messages::parse_message;
 use regex::Regex;
-use serenity::async_trait;
-use serenity::framework::standard::macros::{command, group};
-use serenity::framework::standard::{Args, CommandResult, StandardFramework};
-use serenity::futures::StreamExt;
-use serenity::model::channel::Message;
-use serenity::model::gateway::Ready;
-use serenity::model::prelude::{ChannelId, GuildId};
-use serenity::prelude::*;
-
+use serenity::{
+    async_trait,
+    framework::standard::{
+        macros::{command, group},
+        {Args, CommandResult, StandardFramework},
+    },
+    futures::StreamExt,
+    model::{
+        channel::Message,
+        gateway::Ready,
+        id::{ChannelId, GuildId},
+    },
+    prelude::*,
+};
 
 #[group]
 #[commands(ping)]
@@ -40,45 +45,47 @@ impl EventHandler for Handler {
             println!("{}", &msg.content);
         }
 
-        if (&self.owner == msg.author.id.as_u64()) || (self.editors.contains(msg.author.id.as_u64())){
+        if (&self.owner == msg.author.id.as_u64())
+            || (self.editors.contains(msg.author.id.as_u64()))
+        {
             match msg.content.as_str() {
+                "~toggle status" => {
+                    self.print_status(&ctx, &msg).await;
+                }
                 "~toggle pixiv" => {
                     let mut lock = self.switches.lock().await;
                     lock.pixiv_switch = !lock.pixiv_switch;
-                },
-        
+                }
                 "~toggle twitter" => {
                     let mut lock = self.switches.lock().await;
                     lock.twitter_switch = !lock.twitter_switch;
-                },
+                }
                 "~toggle insta" => {
                     let mut lock = self.switches.lock().await;
                     lock.insta_switch = !lock.insta_switch;
-                }, 
-    
+                }
                 "~toggle tiktok" => {
                     let mut lock = self.switches.lock().await;
                     lock.tiktok_switch = !lock.tiktok_switch;
-                },
+                }
                 "~toggle misskey" => {
                     let mut lock = self.switches.lock().await;
                     lock.misskey_switch = !lock.misskey_switch;
-                },
+                }
                 _ => {}
             }
         }
-
 
         let switches = self.switches.lock().await;
 
         if switches.twitter_switch {
             self.twitter_handler(&ctx, &msg).await;
         }
-        
+
         if switches.pixiv_switch {
             self.pixiv_handler(&ctx, &msg).await;
         }
-        
+
         if switches.insta_switch {
             self.insta_handler(&ctx, &msg).await;
         }
@@ -98,7 +105,6 @@ impl EventHandler for Handler {
     }
 }
 
-
 #[tokio::main]
 async fn main() {
     dotenv().ok();
@@ -107,20 +113,45 @@ async fn main() {
     let owner_string = env::var("OWNER").expect("OWNER");
     let editor_string = env::var("EDITORS").expect("EDITORS");
     let owner = owner_string.parse::<u64>().unwrap();
-    let editors: HashSet<u64> = editor_string.split(",").map(|s| s.parse::<u64>().unwrap()).collect();
+    let editors: HashSet<u64> = editor_string
+        .split(",")
+        .map(|s| s.parse::<u64>().unwrap())
+        .collect();
 
     // Define switches via env or default to true
-    let pixiv_switch: bool = env::var("PIXIV_SWITCH").unwrap_or("true".to_string()).parse().unwrap();
-    let twitter_switch: bool = env::var("TWITTER_SWITCH").unwrap_or("true".to_string()).parse().unwrap();
-    let insta_switch: bool = env::var("INSTA_SWITCH").unwrap_or("true".to_string()).parse().unwrap();
-    let tiktok_switch: bool = env::var("TIKTOK_SWITCH").unwrap_or("true".to_string()).parse().unwrap();
-    let misskey_switch: bool = env::var("TIKTOK_SWITCH").unwrap_or("true".to_string()).parse().unwrap();
+    let pixiv_switch: bool = env::var("PIXIV_SWITCH")
+        .unwrap_or("true".to_string())
+        .parse()
+        .unwrap();
+    let twitter_switch: bool = env::var("TWITTER_SWITCH")
+        .unwrap_or("true".to_string())
+        .parse()
+        .unwrap();
+    let insta_switch: bool = env::var("INSTA_SWITCH")
+        .unwrap_or("true".to_string())
+        .parse()
+        .unwrap();
+    let tiktok_switch: bool = env::var("TIKTOK_SWITCH")
+        .unwrap_or("true".to_string())
+        .parse()
+        .unwrap();
+    let misskey_switch: bool = env::var("TIKTOK_SWITCH")
+        .unwrap_or("true".to_string())
+        .parse()
+        .unwrap();
 
     // Build a request engine to reuse later
     let client = reqwest::Client::new();
 
     println!("Loading owner: {}", owner);
-    println!("Loading editors: {}", editors.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(" "));
+    println!(
+        "Loading editors: {}",
+        editors
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(" ")
+    );
 
     // Build database pool
     let database = sqlx::mysql::MySqlPoolOptions::new()
@@ -152,14 +183,13 @@ async fn main() {
 
     // Define these in a seperate file next time
 
-
     // Build switching mutex for logic
     let switches = Mutex::new(Switches {
         pixiv_switch,
         twitter_switch,
         insta_switch,
         tiktok_switch,
-        misskey_switch
+        misskey_switch,
     });
 
     // Build event handlers with all your variables
@@ -173,7 +203,7 @@ async fn main() {
         switches,
         owner,
         editors,
-        client
+        client,
     };
 
     // Init the framework groups
@@ -196,8 +226,8 @@ async fn main() {
         .await
         .expect("Error creating client");
 
-    // start listening for events with 2 shards
-    if let Err(why) = client.start_shards(2).await {
+    // start listening for events with 1 shard
+    if let Err(why) = client.start_shards(1).await {
         println!("An error occurred while running the client: {:?}", why);
     }
 }
