@@ -1,17 +1,24 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use serenity::client::Context;
 use serenity::model::channel::Message;
 use std::collections::HashMap;
-
 use super::Handler;
 
 #[derive(Deserialize)]
 struct Note {
     files: Vec<File>,
     user: User,
+    #[serde(deserialize_with="parse_null")]
     text: String,
     #[serde(rename(deserialize = "createdAt"))]
     created_at: String,
+}
+
+fn parse_null<'de, D>(d: D) -> Result<String, D::Error> where D: Deserializer<'de> {
+    Deserialize::deserialize(d)
+        .map(|x: Option<_>| {
+            x.unwrap_or("".to_string())
+        })
 }
 
 #[derive(Deserialize, Clone)]
@@ -63,7 +70,7 @@ impl Handler {
 
                                 // Build peekables and check if contains any value
                                 let contains_video = !videos.is_empty();
-                                let contains_image = !images_list.iter().filter(|f| f.is_nsfw).collect::<Vec<_>>().is_empty();
+                                let contains_image = !images_list.is_empty();
 
                                 // Shared res to prevent duplication
                                 let mut _res;
@@ -77,6 +84,8 @@ impl Handler {
 
                                 // If there's a value in image list, assume it's all images
                                 } else if contains_image {
+                                    println!("Got into images");
+
                                     let mut message = msg.clone();
                                     match message.suppress_embeds(&ctx.http).await {
                                         Ok(_) => {println!("Removed embed");},
