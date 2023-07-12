@@ -47,18 +47,21 @@ struct General;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content.is_empty() {
-            println!(
-                "{}",
-                &msg.sticker_items
-                    .iter()
-                    .map(|s| format!("{:?}", s))
-                    .collect::<Vec<String>>()
-                    .join(" ")
-            )
-        } else {
-            println!("{}", &msg.content);
+        if !msg.author.bot {
+            if msg.content.is_empty() {
+                println!(
+                    "{}",
+                    &msg.sticker_items
+                        .iter()
+                        .map(|s| format!("{:?}", s))
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                )
+            } else {
+                println!("{}", &msg.content);
+            }
         }
+
         if (&self.owner == msg.author.id.as_u64())
             || (self.editors.contains(msg.author.id.as_u64()))
         {
