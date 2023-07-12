@@ -1,35 +1,36 @@
-use serenity::framework::standard::macros::{check, command, group, help, hook};
+use std::collections::HashSet;
+
+use serenity::framework::standard::macros::check;
 use serenity::framework::standard::{
-    help_commands,
     Args,
-    CommandGroup,
     CommandOptions,
-    CommandResult,
-    DispatchError,
-    HelpOptions,
     Reason,
-    StandardFramework,
 };
 
-async fn is_owner(ctx: &Context, msg: &Message) -> bool {
+use serenity::prelude::Context;
+use serenity::model::prelude::Message;
+
+use crate::{Owner, Editors};
+
+pub async fn is_owner(ctx: &Context, msg: &Message) -> bool {
     let data = ctx.data.read().await;
-    let owner: u64 = data.get::<Owner>().expect("Expected Owner in TypeHash");
+    let owner: u64 = *data.get::<Owner>().expect("Expected Owner in TypeHash");
 
     msg.author.id == owner
 }
 
-async fn is_editor(ctx: &Context, msg: &Message) -> bool {
+pub async fn is_editor(ctx: &Context, msg: &Message) -> bool {
     let data = ctx.data.read().await;
-    let editors: HashSet<u64> = data.get::<Editors>().expect("Expected Editors in TypeHash");
+    let editors: &HashSet<u64> = data.get::<Editors>().expect("Expected Editors in TypeHash");
 
-    editors.contains(msg.author.id)
+    editors.contains(msg.author.id.as_u64())
 }
 
 
 #[check]
 #[name = "Owner"]
 async fn owner_check(
-    ctx: &Context,
+    _ctx: &Context,
     msg: &Message,
     _: &mut Args,
     _: &CommandOptions,

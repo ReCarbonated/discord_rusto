@@ -1,7 +1,6 @@
 use dotenvy::dotenv;
 
-use std::collections::HashMap;
-use std::{collections::HashSet};
+use std::collections::{HashSet, HashMap};
 use std::env;
 pub mod commands;
 pub mod helpers;
@@ -119,7 +118,6 @@ async fn main() {
         .connect(&database_url)
         .await
         .expect("Couldn't connect to database");
-    // Define these in a seperate file next time
 
     // Build event handlers with variables
     let handler = Handler{};
@@ -140,7 +138,8 @@ async fn main() {
         .configure(|c| c.prefix("~")) // set the bot's prefix to "~"
         .group(&GENERAL_GROUP)
         .group(&MATH_GROUP)
-        .group(&EMOJIS_GROUP);
+        .group(&EMOJIS_GROUP)
+        .group(&LISTENERCOMMAND_GROUP);
 
     // Login with bot token with Intents
     let token = env::var("DISCORD_TOKEN").expect("token");
