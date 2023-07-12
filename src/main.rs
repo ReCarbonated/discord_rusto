@@ -5,11 +5,10 @@ use std::env;
 pub mod commands;
 pub mod helpers;
 mod listeners;
-use listeners::{Handler, Switches};
+use listeners::{check_parsers, Handler, Listener};
 
 use commands::*;
 use helpers::messages::parse_message;
-use regex::Regex;
 use serenity::{
     async_trait,
     framework::standard::{
@@ -24,6 +23,22 @@ use serenity::{
     },
     prelude::*,
 };
+
+struct MessageListener;
+struct WebClient;
+struct DbPool;
+
+impl TypeMapKey for MessageListener {
+    type Value = Vec<Listener>;
+}
+
+impl TypeMapKey for WebClient {
+    type Value = reqwest::Client;
+}
+
+impl TypeMapKey for DbPool {
+    type Value = sqlx::MySqlPool;
+}
 
 #[group]
 #[commands(ping)]
@@ -44,7 +59,6 @@ impl EventHandler for Handler {
         } else {
             println!("{}", &msg.content);
         }
-
         if (&self.owner == msg.author.id.as_u64())
             || (self.editors.contains(msg.author.id.as_u64()))
         {
@@ -52,52 +66,18 @@ impl EventHandler for Handler {
                 "~toggle status" => {
                     self.print_status(&ctx, &msg).await;
                 }
-                "~toggle pixiv" => {
-                    let mut lock = self.switches.lock().await;
-                    lock.pixiv_switch = !lock.pixiv_switch;
-                }
-                "~toggle twitter" => {
-                    let mut lock = self.switches.lock().await;
-                    lock.twitter_switch = !lock.twitter_switch;
-                }
-                "~toggle insta" => {
-                    let mut lock = self.switches.lock().await;
-                    lock.insta_switch = !lock.insta_switch;
-                }
-                "~toggle tiktok" => {
-                    let mut lock = self.switches.lock().await;
-                    lock.tiktok_switch = !lock.tiktok_switch;
-                }
-                "~toggle misskey" => {
-                    let mut lock = self.switches.lock().await;
-                    lock.misskey_switch = !lock.misskey_switch;
-                }
                 _ => {}
             }
         }
-
-        let switches = self.switches.lock().await;
-
-        if switches.twitter_switch {
-            self.twitter_handler(&ctx, &msg).await;
+        {
+            let listners = ctx.data.read().await;
+            let listners: &Vec<Listener> = listners
+                .get::<MessageListener>()
+                .expect("Expected MessageListener in TypeHash");
+            check_parsers(&ctx, &msg, listners).await;
         }
 
-        if switches.pixiv_switch {
-            self.pixiv_handler(&ctx, &msg).await;
-        }
-
-        if switches.insta_switch {
-            self.insta_handler(&ctx, &msg).await;
-        }
-
-        if switches.tiktok_switch {
-            self.tiktok_handler(&ctx, &msg).await;
-        }
-
-        if switches.misskey_switch {
-            self.misskey_handler(&ctx, &msg).await;
-        }
-        parse_message(&msg, &self.database).await;
+        parse_message(&msg, &ctx).await;
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
@@ -118,31 +98,6 @@ async fn main() {
         .map(|s| s.parse::<u64>().unwrap())
         .collect();
 
-    // Define switches via env or default to true
-    let pixiv_switch: bool = env::var("PIXIV_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-    let twitter_switch: bool = env::var("TWITTER_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-    let insta_switch: bool = env::var("INSTA_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-    let tiktok_switch: bool = env::var("TIKTOK_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-    let misskey_switch: bool = env::var("TIKTOK_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-
-    // Build a request engine to reuse later
-    let client = reqwest::Client::new();
-
     println!("Loading owner: {}", owner);
     println!(
         "Loading editors: {}",
@@ -159,51 +114,20 @@ async fn main() {
         .connect(&database_url)
         .await
         .expect("Couldn't connect to database");
-
-    // Build regex system
-    let pixiv_regex: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(pixiv.net)\b(\/\w{2})?(\/artworks\/[\d\/]*)(\|\|)?"
-    ).expect("[pixiv_regex]: Failed to compile regex");
-
-    let twitter_regex: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(twitter.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{2,}){1,}(\|\|)?",
-    ).expect("[twitter_regex]: Failed to compile regex");
-
-    let insta_regex: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(instagram.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
-    ).expect("[insta_regex]: Failed to compile regex");
-
-    let tiktok_regex: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(tiktok.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
-    ).expect("[tiktok_regex]: Failed to compile regex");
-
-    let misskey_regex: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(misskey.io/notes/)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
-    ).expect("[tiktok_regex]: Failed to compile regex");
-
     // Define these in a seperate file next time
 
-    // Build switching mutex for logic
-    let switches = Mutex::new(Switches {
-        pixiv_switch,
-        twitter_switch,
-        insta_switch,
-        tiktok_switch,
-        misskey_switch,
-    });
+    // Build event handlers with variables
+    let handler = Handler { owner, editors };
 
-    // Build event handlers with all your variables
-    let handler = Handler {
-        database,
-        pixiv_regex,
-        twitter_regex,
-        insta_regex,
-        tiktok_regex,
-        misskey_regex,
-        switches,
-        owner,
-        editors,
-        client,
+    let list_of_listeners: Vec<Listener> = {
+        let mut collect = Vec::new();
+        collect.push(listeners::tiktok::enroll());
+        collect.push(listeners::misskey::enroll());
+        collect.push(listeners::twitter::enroll());
+        collect.push(listeners::instagram::enroll());
+        collect.push(listeners::pixiv::enroll());
+
+        collect
     };
 
     // Init the framework groups
@@ -226,6 +150,13 @@ async fn main() {
         .await
         .expect("Error creating client");
 
+    {
+        let mut data = client.data.write().await;
+        data.insert::<MessageListener>(list_of_listeners);
+        data.insert::<WebClient>(reqwest::Client::new());
+        data.insert::<DbPool>(database);
+    }
+
     // start listening for events with 1 shard
     if let Err(why) = client.start_shards(1).await {
         println!("An error occurred while running the client: {:?}", why);
@@ -246,20 +177,13 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 async fn channel_parse(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     msg.reply(ctx, "Starting Parse!").await?;
     let channel_id = args.single::<u64>()?;
-    let pool_workers = args.single::<u32>()?;
-    let database_url = env::var("DATABASE_URL").expect("DatabaseURL");
-    let database = sqlx::mysql::MySqlPoolOptions::new()
-        .max_connections(pool_workers)
-        .connect(&database_url)
-        .await
-        .expect("Couldn't connect to database");
 
     let channel = ChannelId(channel_id);
 
     let mut messages = channel.messages_iter(&ctx).boxed();
     while let Some(message_result) = messages.next().await {
         match message_result {
-            Ok(message) => parse_message(&message, &database).await,
+            Ok(message) => parse_message(&message, &ctx).await,
             Err(_error) => {}
         }
     }
@@ -274,14 +198,6 @@ async fn channel_parse(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
 async fn guild_parse(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     msg.reply(ctx, "Starting Parse!").await?;
     let guild_id = args.single::<u64>()?;
-    let pool_workers = args.single::<u32>()?;
-
-    let database_url = env::var("DATABASE_URL").expect("DatabaseURL");
-    let database = sqlx::mysql::MySqlPoolOptions::new()
-        .max_connections(pool_workers)
-        .connect(&database_url)
-        .await
-        .expect("Couldn't connect to database");
 
     let guild = GuildId(guild_id);
     let guild_map = guild.channels(&ctx.http).await;
@@ -289,7 +205,7 @@ async fn guild_parse(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
         let mut messages = channel_id.messages_iter(&ctx).boxed();
         while let Some(message_result) = messages.next().await {
             match message_result {
-                Ok(message) => parse_message(&message, &database).await,
+                Ok(message) => parse_message(&message, &ctx).await,
                 Err(error) => println!("Couldn't access channel: {}", error),
             }
         }

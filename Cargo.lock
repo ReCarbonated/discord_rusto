@@ -510,6 +510,7 @@ version = "0.1.0"
 dependencies = [
  "dotenvy",
  "inventory",
+ "lazy_static",
  "regex",
  "reqwest",
  "serde",
