@@ -1,11 +1,9 @@
-use std::{fs::File, io::Write};
-
 use regex::Regex;
 use serenity::{
     builder::CreateEmbed,
     framework::standard::macros::{command, group},
     framework::standard::{Args, CommandResult},
-    model::{channel::Message},
+    model::channel::Message,
     prelude::Context,
     utils::parse_emoji,
 };
@@ -17,7 +15,24 @@ struct Emojis;
 #[command]
 #[sub_commands(emoji_guild, emoji_message)]
 async fn emoji(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-    msg.reply(&ctx.http, "This is the main function!").await?;
+    let re = Regex::new(r"<a?:\w*:(?P<id>\d*)>").unwrap();
+    let list_of_ids = re
+        .captures_iter(&msg.content)
+        .map(|e| parse_emoji(e.get(0).unwrap().as_str()))
+        .collect::<Vec<_>>();
+
+    msg.reply(
+        &ctx.http,
+        format!(
+            "{}",
+            list_of_ids
+                .iter()
+                .map(|e| e.clone().unwrap().url())
+                .collect::<Vec<_>>().join(" ")
+        ),
+    )
+    .await
+    .expect("Something went fucking wrong");
 
     Ok(())
 }
@@ -49,13 +64,13 @@ async fn emoji_guild(ctx: &Context, msg: &Message, _args: Args) -> CommandResult
 }
 
 #[command]
-#[aliases("m")]
+#[aliases("m", "message")]
 #[description("Get emojis from a message")]
 async fn emoji_message(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let message_id = args.single::<u64>()?;
-    let channel_id = msg.channel_id.as_u64();
+    let channel_id = args.single::<u64>().unwrap_or(msg.channel_id.0);
 
-    let emote_message = ctx.http.get_message(*channel_id, message_id).await;
+    let emote_message = ctx.http.get_message(channel_id, message_id).await;
     match emote_message {
         Ok(message) => {
             let re = Regex::new(r"<a?:\w*:(?P<id>\d*)>").unwrap();
@@ -63,21 +78,23 @@ async fn emoji_message(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 .captures_iter(&message.content)
                 .map(|e| parse_emoji(e.get(0).unwrap().as_str()))
                 .collect::<Vec<_>>();
-
-            let mut file = File::create(format!("/home/carbon/{}.txt", &msg.id)).expect("Unable to create file");
-            list_of_ids.iter().for_each(|e| {
-                let cloned = e.clone().unwrap();
-                file.write(cloned.name.as_bytes()).expect("Unable to write data");
-                file.write(" - ".as_bytes()).expect("Unable to write data");
-                file.write(cloned.animated.to_string().as_bytes()).expect("Unable to write data");
-                file.write(" - ".as_bytes()).expect("Unable to write data");
-                file.write(cloned.url().as_bytes()).expect("Unable to write data");
-                file.write("\n".as_bytes()).expect("Unable to write data");
-            });
+            msg.reply(
+                &ctx.http,
+                format!(
+                    "{}",
+                    list_of_ids
+                        .iter()
+                        .map(|e| e.clone().unwrap().url())
+                        .collect::<Vec<_>>().join(" ")
+                ),
+            )
+            .await
+            .expect("Something went fucking wrong");
             // println!("{:?}", list_of_ids);
         }
         Err(_) => {
             println!("Something fucked up");
+            msg.reply(&ctx.http, "Failed to grab message with supplied id and/or channel_id, might need to specify them.").await.expect("Something went wrong");
         }
     }
 
