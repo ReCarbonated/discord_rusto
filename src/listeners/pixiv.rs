@@ -18,14 +18,17 @@ pub async fn handler(ctx: &Context, msg: &Message) {
     message_fixer(ctx, msg, &*RE, "https://www.ppxiv.net", 7, (1, 8)).await;
 }
 
-pub fn enroll() -> Listener {
+pub fn enroll() -> (String, Listener) {
     let switch: bool = env::var("PIXIV_SWITCH")
         .unwrap_or("true".to_string())
         .parse()
         .unwrap();
 
-    Listener {
-        name: "pixiv".to_string(),
-        switch: switch.clone(),
-    }
+    (
+        "pixiv".to_string(),
+        Listener {
+            name: "pixiv".to_string(),
+            switch: switch.clone(),
+        },
+    )
 }

@@ -18,14 +18,17 @@ pub async fn handler(ctx: &Context, msg: &Message) {
     message_fixer(ctx, msg, &*RE, "https://ddinstagram.com", 6, (1, 8)).await;
 }
 
-pub fn enroll() -> Listener {
+pub fn enroll() -> (String, Listener) {
     let switch: bool = env::var("INSTA_SWITCH")
         .unwrap_or("true".to_string())
         .parse()
         .unwrap();
 
-    Listener {
-        name: "insta".to_string(),
-        switch: switch.clone(),
-    }
+    (
+        "insta".to_string(),
+        Listener {
+            name: "insta".to_string(),
+            switch: switch.clone(),
+        },
+    )
 }

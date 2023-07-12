@@ -17,14 +17,17 @@ pub async fn handler(ctx: &Context, msg: &Message) {
     message_fixer(ctx, msg, &*RE, "https://tiktxk.com", 6, (1, 8)).await;
 }
 
-pub fn enroll() -> Listener {
+pub fn enroll() -> (String, Listener) {
     let tiktok_switch: bool = env::var("TIKTOK_SWITCH")
         .unwrap_or("true".to_string())
         .parse()
         .unwrap();
 
-    Listener {
-        name: "tiktok".to_string(),
-        switch: tiktok_switch.clone(),
-    }
+    (
+        "tiktok".to_string(),
+        Listener {
+            name: "tiktok".to_string(),
+            switch: tiktok_switch.clone(),
+        },
+    )
 }

@@ -1,9 +1,9 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 use serenity::client::Context;
 use serenity::model::channel::Message;
 
-mod generic;
+pub(crate) mod generic;
 pub(crate) mod instagram;
 pub(crate) mod misskey;
 pub(crate) mod pixiv;
@@ -15,8 +15,8 @@ pub struct Listener {
     pub switch: bool,
 }
 
-pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &Vec<Listener>) {
-    for listener in listeners {
+pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &HashMap<String, Listener>) {
+    for (_, listener) in listeners.iter() {
         if listener.switch {
             match listener.name.as_str() {
                 "insta" => {
@@ -40,7 +40,4 @@ pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &Vec<Listene
     }
 }
 
-pub struct Handler {
-    pub owner: u64,
-    pub editors: HashSet<u64>,
-}
+pub struct Handler;

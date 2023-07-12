@@ -1,6 +1,7 @@
 use dotenvy::dotenv;
 
-use std::collections::HashSet;
+use std::collections::HashMap;
+use std::{collections::HashSet};
 use std::env;
 pub mod commands;
 pub mod helpers;
@@ -27,9 +28,11 @@ use serenity::{
 struct MessageListener;
 struct WebClient;
 struct DbPool;
+struct Owner;
+struct Editors;
 
 impl TypeMapKey for MessageListener {
-    type Value = Vec<Listener>;
+    type Value = HashMap<String, Listener>;
 }
 
 impl TypeMapKey for WebClient {
@@ -38,6 +41,14 @@ impl TypeMapKey for WebClient {
 
 impl TypeMapKey for DbPool {
     type Value = sqlx::MySqlPool;
+}
+
+impl TypeMapKey for Owner {
+    type Value = u64;
+}
+
+impl TypeMapKey for Editors {
+    type Value = HashSet<u64>;
 }
 
 #[group]
@@ -62,19 +73,10 @@ impl EventHandler for Handler {
             }
         }
 
-        if (&self.owner == msg.author.id.as_u64())
-            || (self.editors.contains(msg.author.id.as_u64()))
-        {
-            match msg.content.as_str() {
-                "~toggle status" => {
-                    self.print_status(&ctx, &msg).await;
-                }
-                _ => {}
-            }
-        }
+
         {
             let listners = ctx.data.read().await;
-            let listners: &Vec<Listener> = listners
+            let listners: &HashMap<String, Listener> = listners
                 .get::<MessageListener>()
                 .expect("Expected MessageListener in TypeHash");
             check_parsers(&ctx, &msg, listners).await;
@@ -120,9 +122,9 @@ async fn main() {
     // Define these in a seperate file next time
 
     // Build event handlers with variables
-    let handler = Handler { owner, editors };
+    let handler = Handler{};
 
-    let list_of_listeners: Vec<Listener> = {
+    let list_of_listeners: HashMap<String, Listener> = {
         let mut collect = Vec::new();
         collect.push(listeners::tiktok::enroll());
         collect.push(listeners::misskey::enroll());
@@ -131,7 +133,7 @@ async fn main() {
         collect.push(listeners::pixiv::enroll());
 
         collect
-    };
+    }.into_iter().collect();
 
     // Init the framework groups
     let framework = StandardFramework::new()
@@ -158,6 +160,8 @@ async fn main() {
         data.insert::<MessageListener>(list_of_listeners);
         data.insert::<WebClient>(reqwest::Client::new());
         data.insert::<DbPool>(database);
+        data.insert::<Editors>(editors);
+        data.insert::<Owner>(owner);
     }
 
     // start listening for events with 1 shard

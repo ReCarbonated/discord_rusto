@@ -40,13 +40,13 @@ struct User {
     avatar_url: String,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize)]
 struct File {
     url: String,
     #[serde(rename(deserialize = "type"))]
     file_type: String,
-    #[serde(rename(deserialize = "isSensitive"))]
-    is_nsfw: bool,
+    // #[serde(rename(deserialize = "isSensitive"))]
+    // is_nsfw: bool,
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
@@ -181,14 +181,17 @@ pub async fn handler(ctx: &Context, msg: &Message) {
     }
 }
 
-pub fn enroll() -> Listener {
+pub fn enroll() -> (String, Listener) {
     let switch: bool = env::var("MISSKEY_SWITCH")
         .unwrap_or("true".to_string())
         .parse()
         .unwrap();
 
-    Listener {
-        name: "misskey".to_string(),
-        switch: switch.clone(),
-    }
+    (
+        "misskey".to_string(),
+        Listener {
+            name: "misskey".to_string(),
+            switch: switch.clone(),
+        },
+    )
 }
