@@ -1,0 +1,13 @@
+services:
+  discordbot:
+    image: discord_bot
+    environment:
+      DISCORD_TOKEN: MTkyNzQwNzM1ODc4MDM3NTA0.GP34Lk.lONjuGHJLb7-bmgJZrP_4TBYgYPv6oPMVYTlTk
+      DATABASE_URL: mysql://4i3jlglst5vb1gbaq6mw:pscale_pw_JnArbtSnhSfoVEUJlktYHz6M0elrVoYc9gzPPpKJ5MY@aws.connect.psdb.cloud/carbon
+      EDITORS: 133364983819010048,191192318315986945,161947084763824129,58336693870145536,772502094992113694 
+      OWNER: 58369526588256256
+      TWITTER_SWITCH: "false"
+      INSTA_SWITCH: "true"
+      TIKTOK_SWITCH: "true"
+      PIXIV_SWITCH: "true"
+      MISSKEY_SWITCH: "true"
