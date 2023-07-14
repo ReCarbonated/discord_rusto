@@ -13,5 +13,5 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build the Docker image
       env: 
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      run: docker build . --file Dockerfile --tag docker-bot:latest
+        DATABASE_URL: '${{ secrets.DATABASE_URL }}'
+      run: DATABASE_URL=$DATABASE_URL docker build . --file Dockerfile --tag docker-bot:latest
