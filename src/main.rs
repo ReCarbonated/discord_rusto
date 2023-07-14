@@ -1,6 +1,8 @@
 use dotenvy::dotenv;
+use chrono_tz::US::Pacific;
+use sqlx::types::chrono::{TimeZone, Utc};
 
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::env;
 pub mod commands;
 pub mod helpers;
@@ -58,9 +60,32 @@ struct General;
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
         if !msg.author.bot {
+            let guild_name: String;
+            match msg.guild(&ctx.cache) {
+                Some(guild_match) => {
+                    guild_name = guild_match.name;
+                }
+                _ => {
+                    guild_name = "".to_string();
+                }
+            }
+
+            let channel_name = msg
+                .channel_id
+                .name(&ctx.cache)
+                .await
+                .unwrap_or("".to_string());
+            let username = msg.author.name.clone();
+            
+            let time = msg.timestamp.with_timezone(&Pacific).to_rfc3339();
+            
             if msg.content.is_empty() {
                 println!(
-                    "{}",
+                    "[{}][{}]-[{}]-[{}]: {}",
+                    time,
+                    guild_name,
+                    channel_name,
+                    username,
                     &msg.sticker_items
                         .iter()
                         .map(|s| format!("{:?}", s))
@@ -68,10 +93,12 @@ impl EventHandler for Handler {
                         .join(" ")
                 )
             } else {
-                println!("{}", &msg.content);
+                println!(
+                    "[{}][{}]-[{}]-[{}]: {}",
+                    time, guild_name, channel_name, username, &msg.content
+                );
             }
         }
-
 
         {
             let listners = ctx.data.read().await;
@@ -120,7 +147,7 @@ async fn main() {
         .expect("Couldn't connect to database");
 
     // Build event handlers with variables
-    let handler = Handler{};
+    let handler = Handler {};
 
     let list_of_listeners: HashMap<String, Listener> = {
         let mut collect = Vec::new();
@@ -131,7 +158,9 @@ async fn main() {
         collect.push(listeners::pixiv::enroll());
 
         collect
-    }.into_iter().collect();
+    }
+    .into_iter()
+    .collect();
 
     // Init the framework groups
     let framework = StandardFramework::new()

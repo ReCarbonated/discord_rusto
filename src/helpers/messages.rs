@@ -216,22 +216,27 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
     let user_id = msg.author.id.as_u64();
     {
         let mut data = ctx.data.write().await;
-        let pool = data.get_mut::<DbPool>().expect("Expected DbPool in TypeMap");
+        let pool = data
+            .get_mut::<DbPool>()
+            .expect("Expected DbPool in TypeMap");
         insert_user(user_id, pool).await;
     }
-    
 
     let channel_id = msg.channel_id.as_u64();
     {
         let mut data = ctx.data.write().await;
-        let pool = data.get_mut::<DbPool>().expect("Expected DbPool in TypeMap");
+        let pool = data
+            .get_mut::<DbPool>()
+            .expect("Expected DbPool in TypeMap");
         insert_channel(channel_id, pool).await;
     }
 
     if let Some(guild_id) = msg.guild_id {
         {
             let mut data = ctx.data.write().await;
-            let pool = data.get_mut::<DbPool>().expect("Expected DbPool in TypeMap");
+            let pool = data
+                .get_mut::<DbPool>()
+                .expect("Expected DbPool in TypeMap");
             insert_guild(guild_id.as_u64(), pool).await;
         }
     }
@@ -244,7 +249,9 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
             match emote_id {
                 Ok(emote_id) => {
                     let mut data = ctx.data.write().await;
-                    let pool = data.get_mut::<DbPool>().expect("Expected DbPool in TypeMap");
+                    let pool = data
+                        .get_mut::<DbPool>()
+                        .expect("Expected DbPool in TypeMap");
                     insert_emote(&emote_id, pool).await;
                     insert_message(channel_id, user_id, &emote_id, msg, pool).await;
                 }
@@ -257,7 +264,9 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
         let sticker_id = sticker.id.as_u64();
         {
             let mut data = ctx.data.write().await;
-            let pool = data.get_mut::<DbPool>().expect("Expected DbPool in TypeMap");
+            let pool = data
+                .get_mut::<DbPool>()
+                .expect("Expected DbPool in TypeMap");
             insert_sticker(sticker_id, pool).await;
             insert_sticker_use(channel_id, user_id, sticker_id, msg, pool).await;
         }

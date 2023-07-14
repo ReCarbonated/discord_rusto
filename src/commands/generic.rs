@@ -1,16 +1,12 @@
 use std::collections::HashSet;
 
 use serenity::framework::standard::macros::check;
-use serenity::framework::standard::{
-    Args,
-    CommandOptions,
-    Reason,
-};
+use serenity::framework::standard::{Args, CommandOptions, Reason};
 
-use serenity::prelude::Context;
 use serenity::model::prelude::Message;
+use serenity::prelude::Context;
 
-use crate::{Owner, Editors};
+use crate::{Editors, Owner};
 
 pub async fn is_owner(ctx: &Context, msg: &Message) -> bool {
     let data = ctx.data.read().await;
@@ -25,7 +21,6 @@ pub async fn is_editor(ctx: &Context, msg: &Message) -> bool {
 
     editors.contains(msg.author.id.as_u64())
 }
-
 
 #[check]
 #[name = "Owner"]
