@@ -1,19 +1,34 @@
-use serenity::model::channel::Message;
+use std::env;
+
+use regex::Regex;
 use serenity::client::Context;
+use serenity::model::channel::Message;
 
-use super::Handler;
+use super::generic::message_fixer;
+use super::Listener;
+use lazy_static::lazy_static;
 
-impl Handler {
-    // Alias function to call message_fixer for pixiv
-    pub async fn pixiv_handler(&self, ctx: &Context, msg: &Message) {
-        self.message_fixer(
-            ctx,
-            msg,
-            &self.pixiv_regex,
-            "https://www.ppxiv.net",
-            7,
-            (1, 8),
-        )
-        .await;
-    }
+lazy_static! {
+    static ref RE: Regex = Regex::new(
+        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(pixiv.net)\b(\/\w{2})?(\/artworks\/[\d\/]*)(\|\|)?"
+    ).unwrap();
+}
+
+pub async fn handler(ctx: &Context, msg: &Message) {
+    message_fixer(ctx, msg, &*RE, "https://www.ppxiv.net", 7, (1, 8)).await;
+}
+
+pub fn enroll() -> (String, Listener) {
+    let switch: bool = env::var("PIXIV_SWITCH")
+        .unwrap_or("true".to_string())
+        .parse()
+        .unwrap();
+
+    (
+        "pixiv".to_string(),
+        Listener {
+            name: "pixiv".to_string(),
+            switch: switch.clone(),
+        },
+    )
 }

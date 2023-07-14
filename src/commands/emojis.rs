@@ -28,7 +28,8 @@ async fn emoji(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             list_of_ids
                 .iter()
                 .map(|e| e.clone().unwrap().url())
-                .collect::<Vec<_>>().join(" ")
+                .collect::<Vec<_>>()
+                .join(" ")
         ),
     )
     .await
@@ -85,7 +86,8 @@ async fn emoji_message(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                     list_of_ids
                         .iter()
                         .map(|e| e.clone().unwrap().url())
-                        .collect::<Vec<_>>().join(" ")
+                        .collect::<Vec<_>>()
+                        .join(" ")
                 ),
             )
             .await

@@ -1,9 +1,9 @@
+use serenity::framework::standard::macros::{command, group};
 use serenity::{
     client::Context,
-    model::channel::Message,
     framework::standard::{Args, CommandResult},
+    model::channel::Message,
 };
-use serenity::framework::standard::macros::{command, group};
 
 #[group]
 #[commands(math, math2)]
