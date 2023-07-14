@@ -1,6 +1,5 @@
 use dotenvy::dotenv;
 use chrono_tz::US::Pacific;
-use sqlx::types::chrono::{TimeZone, Utc};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
