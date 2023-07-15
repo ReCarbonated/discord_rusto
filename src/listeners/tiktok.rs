@@ -14,7 +14,7 @@ lazy_static! {
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://tiktxk.com", 6, (1, 8)).await;
+    message_fixer(ctx, msg, &*RE, "https://tiktxk.com", 6, (1, 8), true).await;
 }
 
 pub fn enroll() -> (String, Listener) {

@@ -10,12 +10,12 @@ use super::Listener;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(instagram.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
+        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(instagram.com)\b(\/(?:reel|p)\/[-a-zA-Z0-9()@:%_\+.~#?&=]{1,}\/?)(\?.*)?(\|\|)?"
     ).unwrap();
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://ddinstagram.com", 6, (1, 8)).await;
+    message_fixer(ctx, msg, &*RE, "https://ddinstagram.com", 6, (1, 8), true).await;
 }
 
 pub fn enroll() -> (String, Listener) {

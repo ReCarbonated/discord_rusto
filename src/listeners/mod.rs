@@ -8,6 +8,7 @@ pub(crate) mod instagram;
 pub(crate) mod misskey;
 pub(crate) mod pixiv;
 pub(crate) mod tiktok;
+pub(crate) mod vt_tiktok;
 pub(crate) mod twitter;
 
 pub struct Listener {
@@ -33,11 +34,32 @@ pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &HashMap<Str
                 }
                 "twitter" => {
                     twitter::handler(&ctx, &msg).await;
-                }
+                },
+                "vt_tiktok" => {
+                    vt_tiktok::handler(&ctx, &msg).await;
+                },
                 _ => {}
             }
         }
     }
+}
+
+
+pub fn gen_handlers() -> HashMap<String, Listener> {
+    let list_of_listeners: HashMap<String, Listener> = {
+        let mut collect = Vec::new();
+        collect.push(tiktok::enroll());
+        collect.push(misskey::enroll());
+        collect.push(twitter::enroll());
+        collect.push(instagram::enroll());
+        collect.push(pixiv::enroll());
+        collect.push(vt_tiktok::enroll());
+        collect
+    }
+    .into_iter()
+    .collect();
+
+    list_of_listeners
 }
 
 pub struct Handler;

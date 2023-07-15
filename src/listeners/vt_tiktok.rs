@@ -9,25 +9,25 @@ use serenity::model::channel::Message;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(twitter.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{2,}){1,}(\|\|)?",
+        r"(\|\|)?http(s)*:\/\/(vt\.)?(tiktok.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
     ).unwrap();
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://vxtwitter.com", 6, (1, 7), true).await;
+    message_fixer(ctx, msg, &*RE, "https://vt.tiktxk.com", 6, (1, 7), true).await;
 }
 
 pub fn enroll() -> (String, Listener) {
-    let switch: bool = env::var("TWITTER_SWITCH")
+    let tiktok_switch: bool = env::var("TIKTOK_SWITCH")
         .unwrap_or("true".to_string())
         .parse()
         .unwrap();
 
     (
-        "twitter".to_string(),
+        "vt_tiktok".to_string(),
         Listener {
-            name: "twitter".to_string(),
-            switch: switch.clone(),
+            name: "vt_tiktok".to_string(),
+            switch: tiktok_switch.clone(),
         },
     )
 }

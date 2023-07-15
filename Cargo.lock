@@ -532,7 +532,6 @@ version = "0.1.0"
 dependencies = [
  "chrono-tz",
  "dotenvy",
- "inventory",
  "lazy_static",
  "regex",
  "reqwest",
@@ -981,12 +980,6 @@ checksum = "7a5bbe824c507c5da5956355e86a746d82e0e1464f65d862cc5e71da70e94b2c"
 dependencies = [
  "cfg-if",
 ]
-
-[[package]]
-name = "inventory"
-version = "0.3.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c38a87a1e0e2752433cd4b26019a469112a25fb43b30f5ee9b3b898925c5a0f9"
 
 [[package]]
 name = "io-lifetimes"

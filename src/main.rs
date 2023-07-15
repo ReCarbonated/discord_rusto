@@ -148,18 +148,6 @@ async fn main() {
     // Build event handlers with variables
     let handler = Handler {};
 
-    let list_of_listeners: HashMap<String, Listener> = {
-        let mut collect = Vec::new();
-        collect.push(listeners::tiktok::enroll());
-        collect.push(listeners::misskey::enroll());
-        collect.push(listeners::twitter::enroll());
-        collect.push(listeners::instagram::enroll());
-        collect.push(listeners::pixiv::enroll());
-
-        collect
-    }
-    .into_iter()
-    .collect();
 
     // Init the framework groups
     let framework = StandardFramework::new()
@@ -184,7 +172,7 @@ async fn main() {
 
     {
         let mut data = client.data.write().await;
-        data.insert::<MessageListener>(list_of_listeners);
+        data.insert::<MessageListener>(listeners::gen_handlers());
         data.insert::<WebClient>(reqwest::Client::new());
         data.insert::<DbPool>(database);
         data.insert::<Editors>(editors);

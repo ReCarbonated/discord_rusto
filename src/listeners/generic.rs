@@ -9,11 +9,25 @@ pub async fn message_fixer(
     url_fix: &str,
     group: usize,
     spoilers: (usize, usize),
+    delete_embed: bool
 ) {
     match re.captures(&msg.content) {
         Some(x) => {
             match x.get(group) {
                 Some(post_fix) => {
+
+                    if delete_embed {
+                        let mut message = msg.clone();
+                        match message.suppress_embeds(&ctx.http).await {
+                            Ok(_) => {
+                                println!("Removed embed");
+                            }
+                            Err(_) => {
+                                println!("Failed to remove, no perms");
+                            }
+                        }
+                    }
+
                     // Rebuild message here, only getting the first value because I don't care anymore
                     let mut spoiler_wrap = "";
                     if x.get(spoilers.0).is_some() && x.get(spoilers.1).is_some() {

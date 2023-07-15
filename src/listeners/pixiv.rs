@@ -15,7 +15,7 @@ lazy_static! {
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://www.ppxiv.net", 7, (1, 8)).await;
+    message_fixer(ctx, msg, &*RE, "https://www.ppxiv.net", 7, (1, 8), false).await;
 }
 
 pub fn enroll() -> (String, Listener) {
