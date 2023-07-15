@@ -155,7 +155,8 @@ async fn main() {
         .group(&GENERAL_GROUP)
         .group(&MATH_GROUP)
         .group(&EMOJIS_GROUP)
-        .group(&LISTENERCOMMAND_GROUP);
+        .group(&LISTENERCOMMAND_GROUP)
+        .group(&STICKER_GROUP);
 
     // Login with bot token with Intents
     let token = env::var("DISCORD_TOKEN").expect("token");
