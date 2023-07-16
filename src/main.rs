@@ -140,7 +140,7 @@ async fn main() {
 
     // Build database pool
     let database = sqlx::mysql::MySqlPoolOptions::new()
-        .max_connections(5)
+        .max_connections(10)
         .connect(&database_url)
         .await
         .expect("Couldn't connect to database");

@@ -91,6 +91,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                             // If there is a value in videos list, assume it's all videos
                             if contains_video {
+                                println!("[misskey][handler]: Found Videos");
                                 for file in videos {
                                     // Just reply to poster with links to videos
                                     _res = &msg.reply(&ctx.http, file.url.clone()).await;
@@ -98,15 +99,15 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                             // If there's a value in image list, assume it's all images
                             } else if contains_image {
-                                println!("Got into images");
+                                println!("[misskey][handler]: Found Images");
 
                                 let mut message = msg.clone();
                                 match message.suppress_embeds(&ctx.http).await {
                                     Ok(_) => {
-                                        println!("Removed embed");
+                                        println!("[misskey][handler]: Removed embed");
                                     }
                                     Err(_) => {
-                                        println!("Failed to remove, no perms");
+                                        println!("[misskey][handler]: Failed to remove, no perms");
                                     }
                                 }
 
@@ -130,7 +131,6 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                             // Error handling on next value
                                             match images.next() {
                                                 Some(image) => {
-                                                    println!("{}", image.url);
                                                     e.image(image.url.clone());
                                                 }
                                                 _ => {
@@ -150,7 +150,6 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                         // For any leftover images, append more embeds with same url as above
                                         for image in images {
                                             m.add_embed(|e| {
-                                                println!("{}", image.url);
                                                 e.image(image.url.clone()).url(format!(
                                                     "https://misskey.io/notes/{}",
                                                     note_id.as_str()
@@ -164,11 +163,11 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     .await;
                             }
                         }
-                        Err(_) => {
-                            println!("Error trying to read response")
+                        Err(err) => {
+                            println!("[misskey][handler]: Error trying to read response: {}", err)
                         }
                     },
-                    Err(_) => println!("Error trying to access api"),
+                    Err(err) => println!("[misskey][handler]: Error trying to access api with id {} and with: {}", note_id.as_str(), err),
                 }
             }
             None => {

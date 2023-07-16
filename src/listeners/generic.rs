@@ -20,10 +20,10 @@ pub async fn message_fixer(
                         let mut message = msg.clone();
                         match message.suppress_embeds(&ctx.http).await {
                             Ok(_) => {
-                                println!("Removed embed");
+                                println!("[generic][handler]: Removed embed");
                             }
                             Err(_) => {
-                                println!("Failed to remove, no perms");
+                                println!("[generic][handler]: Failed to remove, no perms");
                             }
                         }
                     }

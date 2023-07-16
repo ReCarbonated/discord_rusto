@@ -33,7 +33,7 @@ async fn emoji(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         ),
     )
     .await
-    .expect("Something went fucking wrong");
+    .expect("[emoji]: Something went fucking wrong");
 
     Ok(())
 }
@@ -58,7 +58,7 @@ async fn emoji_guild(ctx: &Context, msg: &Message, _args: Args) -> CommandResult
         .await;
 
     if let Err(why) = msg {
-        println!("Error sending message: {:?}", why);
+        println!("[emoji][emoji_guild]: Error sending message: {:?}", why);
     }
 
     Ok(())
@@ -95,7 +95,7 @@ async fn emoji_message(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
             // println!("{:?}", list_of_ids);
         }
         Err(_) => {
-            println!("Something fucked up");
+            println!("[emoji][emoji_message]: Tried to get message but failed");
             msg.reply(&ctx.http, "Failed to grab message with supplied id and/or channel_id, might need to specify them.").await.expect("Something went wrong");
         }
     }
