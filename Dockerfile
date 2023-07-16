@@ -4,7 +4,7 @@ COPY . .
 RUN cargo install --path .
 
 FROM debian:bullseye-slim
-RUN apt-get update && apt install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=build-env /usr/local/cargo/bin/discord-bot-rust /usr/local/bin/discord-bot-rust
 CMD ["discord-bot-rust"]
 
