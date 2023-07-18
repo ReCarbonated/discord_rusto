@@ -61,6 +61,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                     .await
                     .get::<WebClient>()
                     .expect("Expected WebClient in TypeMap")
+                    .clone()
                     .post("https://misskey.io/api/notes/show")
                     .json(&json)
                     .send()
@@ -172,10 +173,11 @@ pub async fn handler(ctx: &Context, msg: &Message) {
             }
             None => {
                 // Didn't find the group somehow?, might not be a note or something
+                println!("Didn't find a match with the regex, weird? {:?}", x);
             }
         },
         None => {
-            // Didn't find a regex max
+            // Didn't find a regex match
         }
     }
 }

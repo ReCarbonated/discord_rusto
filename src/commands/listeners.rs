@@ -34,7 +34,7 @@ async fn toggle(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 None => {}
             }
         } else {
-            println! {"Someone tried to call the toggle function"}
+            println!("[toggle]: Someone tried to call the toggle function")
         }
     }
 
