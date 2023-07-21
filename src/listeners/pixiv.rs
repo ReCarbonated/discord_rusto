@@ -1,10 +1,11 @@
-use std::env;
-
+use crate::PixivClientHold;
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
+use std::path::PathBuf;
+use std::{env, fs};
 
-use super::generic::message_fixer;
+// use super::generic::message_fixer;
 use super::Listener;
 use lazy_static::lazy_static;
 
@@ -12,10 +13,127 @@ lazy_static! {
     static ref RE: Regex = Regex::new(
         r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(pixiv.net)\b(\/\w{2})?(\/artworks\/[\d\/]*)(\|\|)?"
     ).unwrap();
+
+    static ref RE2: Regex = Regex::new(
+        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(pixiv.net)\b(\/\w{2})?(\/artworks\/)([\d\/]*)(\|\|)?"
+    ).unwrap();
 }
 
+// pub async fn fallback_handler(ctx: &Context, msg: &Message) {
+//     message_fixer(ctx, msg, &*RE, "https://www.ppxiv.net", 7, (1, 8), false).await;
+// }
+
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://www.ppxiv.net", 7, (1, 8), false).await;
+    match RE2.captures(&msg.content) {
+        Some(x) => match x.get(8) {
+            Some(artwork_id) => {
+                let data = ctx.data.read().await;
+                let pixiv_client = data
+                    .get::<PixivClientHold>()
+                    .expect("Expected Pixiv Client in TypeMap")
+                    .clone();
+                match pixiv_client
+                    .download_image(artwork_id.as_str(), Option::None)
+                    .await
+                {
+                    Ok(_) => {
+                        // Ok stuff downloaded, time to now build the thingy.
+                        let image_name = fs::read_dir(format!("./{}", artwork_id.as_str()))
+                            .unwrap()
+                            .map(|e| {
+                                let temp = e.unwrap().file_name();
+                                let filename = temp.to_str().unwrap().to_string();
+
+                                filename
+                            })
+                            .collect::<Vec<String>>();
+
+                        let mut paths = Vec::<PathBuf>::new();
+                        for path in fs::read_dir(format!("./{}", artwork_id.as_str())).unwrap() {
+                            match path {
+                                Ok(path) => {
+                                    let temp = path.path();
+                                    paths.push(temp);
+                                }
+                                Err(_) => {
+                                    println!("Something fucking died here")
+                                }
+                            }
+                        }
+
+                        let mut message = msg.clone();
+                        match message.suppress_embeds(&ctx.http).await {
+                            Ok(_) => {
+                                println!("[pixiv][handler]: Removed embed");
+                            }
+                            Err(_) => {
+                                println!("[pixiv][handler]: Failed to remove, no perms");
+                            }
+                        }
+
+                        let mut images = image_name.iter().take(4);
+
+                        // Build a message object to send to channel
+                        let _res = msg
+                            .channel_id
+                            .send_message(&ctx.http, |m| {
+                                // construct new iter for images because of embed format
+                                m.add_embed(|e| {
+                                    e.author(|a| a.name("I'm Lazy rn".clone()))
+                                        .title("PixivFixingSucks");
+
+                                    // Error handling on next value
+                                    match images.next() {
+                                        Some(image) => {
+                                            println!("{}", format!("attachment://{}", image));
+                                            e.attachment(format!("{}", image));
+                                        }
+                                        _ => {
+                                            println!("huh");
+                                        }
+                                    }
+
+                                    // Assign URL because discord groups via url
+                                    e.url(x.get(0).expect("Something actually here").as_str());
+
+                                    e
+                                });
+
+                                // For any leftover images, append more embeds with same url as above
+                                for image in images {
+                                    println!("{}", format!("attachment://{}", image));
+                                    m.add_embed(|e| {
+                                        e.attachment(format!("{}", image)).url(
+                                            x.get(0).expect("Something actually here").as_str(),
+                                        )
+                                    });
+                                }
+                                // Append reply to message
+                                m.reference_message((msg.channel_id, msg.id));
+
+                                m.add_files(paths.iter().map(|e| e.as_path()));
+                                println!("{:?}", m);
+                                m
+                            })
+                            .await;
+
+                        // Now delete the files that you just downloaded
+                        let _ = fs::remove_dir_all(format!("./{}", artwork_id.as_str()));
+                    }
+                    Err(err) => {
+                        println!("Failed to download, {:?}", err)
+                    }
+                }
+            }
+            None => {
+                // Didn't find the group somehow?, might not be a note or something
+                println!("Didn't find a match with the regex, weird? {:?}", x);
+            }
+        },
+        None => {
+            // Didn't find a regex match
+        }
+    }
 }
 
 pub fn enroll() -> (String, Listener) {

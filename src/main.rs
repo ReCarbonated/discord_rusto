@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 pub mod commands;
 pub mod helpers;
+pub mod types;
 mod listeners;
 use listeners::{check_parsers, Handler, Listener};
 
@@ -25,11 +26,14 @@ use serenity::{
     prelude::*,
 };
 
+use crate::helpers::Pixiv;
+
 struct MessageListener;
 struct WebClient;
 struct DbPool;
 struct Owner;
 struct Editors;
+struct PixivClientHold;
 
 impl TypeMapKey for MessageListener {
     type Value = HashMap<String, Listener>;
@@ -49,6 +53,10 @@ impl TypeMapKey for Owner {
 
 impl TypeMapKey for Editors {
     type Value = HashSet<u64>;
+}
+
+impl TypeMapKey for PixivClientHold {
+    type Value = helpers::Pixiv;
 }
 
 #[group]
@@ -122,6 +130,7 @@ async fn main() {
     let database_url = env::var("DATABASE_URL").expect("DatabaseURL");
     let owner_string = env::var("OWNER").expect("OWNER");
     let editor_string = env::var("EDITORS").expect("EDITORS");
+    let pixiv_token = env::var("PIXIV_TOKEN").expect("PIXIV_TOKEN");
     let owner = owner_string.parse::<u64>().unwrap();
     let editors: HashSet<u64> = editor_string
         .split(",")
@@ -171,6 +180,8 @@ async fn main() {
         .await
         .expect("Error creating client");
 
+    let pixiv_client = Pixiv::new(Option::from(pixiv_token)).expect("Need PIXIV_TOKEN for 18+");
+
     {
         let mut data = client.data.write().await;
         data.insert::<MessageListener>(listeners::gen_handlers());
@@ -178,6 +189,7 @@ async fn main() {
         data.insert::<DbPool>(database);
         data.insert::<Editors>(editors);
         data.insert::<Owner>(owner);
+        data.insert::<PixivClientHold>(pixiv_client);
     }
 
     // start listening for events with 1 shard

@@ -28,6 +28,7 @@ pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &HashMap<Str
                 }
                 "pixiv" => {
                     pixiv::handler(&ctx, &msg).await;
+                    // pixiv::fallback_handler(&ctx, &msg).await;
                 }
                 "misskey" => {
                     misskey::handler(&ctx, &msg).await;
