@@ -61,16 +61,6 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             }
                         }
 
-                        let mut message = msg.clone();
-                        match message.suppress_embeds(&ctx.http).await {
-                            Ok(_) => {
-                                println!("[pixiv][handler]: Removed embed");
-                            }
-                            Err(_) => {
-                                println!("[pixiv][handler]: Failed to remove, no perms");
-                            }
-                        }
-
                         let mut images = image_name.iter().take(4);
 
                         // Build a message object to send to channel
@@ -119,6 +109,16 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                         // Now delete the files that you just downloaded
                         let _ = fs::remove_dir_all(format!("./{}", artwork_id.as_str()));
+
+                        let mut message = msg.clone();
+                        match message.suppress_embeds(&ctx.http).await {
+                            Ok(_) => {
+                                println!("[pixiv][handler]: Removed embed");
+                            }
+                            Err(_) => {
+                                println!("[pixiv][handler]: Failed to remove, no perms");
+                            }
+                        }
                     }
                     Err(err) => {
                         println!("Failed to download, {:?}", err)

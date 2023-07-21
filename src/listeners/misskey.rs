@@ -102,16 +102,6 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             } else if contains_image {
                                 println!("[misskey][handler]: Found Images");
 
-                                let mut message = msg.clone();
-                                match message.suppress_embeds(&ctx.http).await {
-                                    Ok(_) => {
-                                        println!("[misskey][handler]: Removed embed");
-                                    }
-                                    Err(_) => {
-                                        println!("[misskey][handler]: Failed to remove, no perms");
-                                    }
-                                }
-
                                 // Build a message object to send to channel
                                 let _res = msg
                                     .channel_id
@@ -162,6 +152,17 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                         m
                                     })
                                     .await;
+
+
+                                let mut message = msg.clone();
+                                match message.suppress_embeds(&ctx.http).await {
+                                    Ok(_) => {
+                                        println!("[misskey][handler]: Removed embed");
+                                    }
+                                    Err(_) => {
+                                        println!("[misskey][handler]: Failed to remove, no perms");
+                                    }
+                                }
                             }
                         }
                         Err(err) => {

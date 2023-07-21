@@ -15,19 +15,6 @@ pub async fn message_fixer(
         Some(x) => {
             match x.get(group) {
                 Some(post_fix) => {
-
-                    if delete_embed {
-                        let mut message = msg.clone();
-                        match message.suppress_embeds(&ctx.http).await {
-                            Ok(_) => {
-                                println!("[generic][handler]: Removed embed");
-                            }
-                            Err(_) => {
-                                println!("[generic][handler]: Failed to remove, no perms");
-                            }
-                        }
-                    }
-
                     // Rebuild message here, only getting the first value because I don't care anymore
                     let mut spoiler_wrap = "";
                     if x.get(spoilers.0).is_some() && x.get(spoilers.1).is_some() {
@@ -42,6 +29,18 @@ pub async fn message_fixer(
                         spoiler_wrap
                     );
                     msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
+
+                    if delete_embed {
+                        let mut message = msg.clone();
+                        match message.suppress_embeds(&ctx.http).await {
+                            Ok(_) => {
+                                println!("[generic][handler]: Removed embed");
+                            }
+                            Err(_) => {
+                                println!("[generic][handler]: Failed to remove, no perms");
+                            }
+                        }
+                    }
                 }
                 None => {}
             }
