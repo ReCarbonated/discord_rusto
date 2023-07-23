@@ -66,12 +66,17 @@ impl Pixiv {
         Ok(Pixiv { client })
     }
 
-    pub async fn download_image(&self, illust_id: &str, author: Option<String>) -> Result<()> {
+    pub async fn download_image(&self, illust_id: &str, author: Option<String>) -> Result<Illust> {
         let illust = self.get_illust(illust_id.clone()).await?;
+
+        let mut page_count = illust.page_count;
+        if page_count > 4 {
+            page_count = 4
+        }
 
         println!("{}", format!(
             "Fetching images of {illust_id} ({} pages)",
-            illust.page_count
+            page_count
         ));
 
         let base_url = get_base_path(illust.urls.original.clone());
@@ -85,10 +90,6 @@ impl Pixiv {
 
         fs::create_dir_all(full_path.clone()).await?;
 
-        let mut page_count = illust.page_count - 1;
-        if page_count > 4 {
-            page_count = 4
-        }
 
         match illust.illust_type {
             // map each page to a future that downloads the image
@@ -112,7 +113,7 @@ impl Pixiv {
 
         println!("{}", format!("Done! {full_path}"));
 
-        Ok(())
+        Ok(illust)
     }
 
 
@@ -146,6 +147,18 @@ impl Pixiv {
 
         Ok(data.body)
     }
+
+    pub async fn get_illust_json(&self, illust_id: &str) -> Result<String> {
+        let data = self
+            .client
+            .get(format!("https://www.pixiv.net/ajax/illust/{illust_id}"))
+            .send()
+            .await?
+            .error_for_status()?.text().await.unwrap();
+
+        Ok(data)
+    }
+
 
     async fn fetch_bytes(&self, url: &str) -> Result<Vec<u8>> {
         let data = self

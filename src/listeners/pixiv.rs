@@ -36,7 +36,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                     .download_image(artwork_id.as_str(), Option::None)
                     .await
                 {
-                    Ok(_) => {
+                    Ok(illust) => {
                         let mut paths = Vec::<PathBuf>::new();
                         for path in fs::read_dir(format!("./{}", artwork_id.as_str())).unwrap() {
                             match path {
@@ -58,8 +58,8 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             .send_message(&ctx.http, |m| {
                                 // construct new iter for images because of embed format
                                 m.add_embed(|e| {
-                                    e.author(|a| a.name("I'm Lazy rn"))
-                                        .title("PixivFixingSucks");
+                                    e.author(|a| a.name(illust.user_name))
+                                        .title(illust.title);
 
                                     // Error handling on next value
                                     match images.next() {
