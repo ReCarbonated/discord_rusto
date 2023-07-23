@@ -37,17 +37,6 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                     .await
                 {
                     Ok(_) => {
-                        // Ok stuff downloaded, time to now build the thingy.
-                        let image_name = fs::read_dir(format!("./{}", artwork_id.as_str()))
-                            .unwrap()
-                            .map(|e| {
-                                let temp = e.unwrap().file_name();
-                                let filename = temp.to_str().unwrap().to_string();
-
-                                filename
-                            })
-                            .collect::<Vec<String>>();
-
                         let mut paths = Vec::<PathBuf>::new();
                         for path in fs::read_dir(format!("./{}", artwork_id.as_str())).unwrap() {
                             match path {
@@ -61,7 +50,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             }
                         }
 
-                        let mut images = image_name.iter().take(4);
+                        let mut images = paths.iter().take(4);
 
                         // Build a message object to send to channel
                         let _res = msg
@@ -69,12 +58,13 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             .send_message(&ctx.http, |m| {
                                 // construct new iter for images because of embed format
                                 m.add_embed(|e| {
-                                    e.author(|a| a.name("I'm Lazy rn".clone()))
+                                    e.author(|a| a.name("I'm Lazy rn"))
                                         .title("PixivFixingSucks");
 
                                     // Error handling on next value
                                     match images.next() {
                                         Some(image) => {
+                                            let image = image.file_name().unwrap().to_str().unwrap();
                                             println!("{}", format!("attachment://{}", image));
                                             e.attachment(format!("{}", image));
                                         }
@@ -91,6 +81,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                                 // For any leftover images, append more embeds with same url as above
                                 for image in images {
+                                    let image = image.file_name().unwrap().to_str().unwrap();
                                     println!("{}", format!("attachment://{}", image));
                                     m.add_embed(|e| {
                                         e.attachment(format!("{}", image)).url(
@@ -100,9 +91,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 }
                                 // Append reply to message
                                 m.reference_message((msg.channel_id, msg.id));
-
                                 m.add_files(paths.iter().map(|e| e.as_path()));
-                                println!("{:?}", m);
                                 m
                             })
                             .await;

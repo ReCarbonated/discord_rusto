@@ -8,7 +8,7 @@ use serenity::futures;
 use tokio::fs;
 
 
-use crate::types::pixiv::{Illust, Response, Ugoira, User};
+use crate::types::pixiv::{Illust, Response};
 
 const BASE_HOSTNAME: &str = "www.pixiv.net";
 const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0";
@@ -85,10 +85,15 @@ impl Pixiv {
 
         fs::create_dir_all(full_path.clone()).await?;
 
+        let mut page_count = illust.page_count - 1;
+        if page_count > 4 {
+            page_count = 4
+        }
+
         match illust.illust_type {
             // map each page to a future that downloads the image
             0 => {
-                let downloads = (0..=illust.page_count - 1).into_iter().map(|page| {
+                let downloads = (0..page_count).into_iter().map(|page| {
                     self.fetch_and_save_image(
                         format!("{base_url}/{illust_id}_p{page}.{ext}"),
                         format!("{full_path}/p{page}.{ext}"),
@@ -102,22 +107,6 @@ impl Pixiv {
                 }
             }
 
-            2 => {
-                let (first, second) = tokio::join!(
-                    self.fetch_and_save_image(
-                        illust.urls.original,
-                        format!("{full_path}/thumbnail.{ext}"),
-                    ),
-                    self.fetch_and_save_ugoira(
-                        illust_id,
-                        format!("{full_path}/{illust_id}_ugoira1920x1080.zip"),
-                    ),
-                );
-
-                first?;
-                second?;
-            }
-
             _ => bail!("Unsupported illust type: {}, skipping", illust.illust_type),
         };
 
@@ -126,45 +115,6 @@ impl Pixiv {
         Ok(())
     }
 
-    pub async fn download_user(&self, user_id: &str) -> Result<()> {
-        let res = self
-            .client
-            .get(format!(
-                "https://www.pixiv.net/ajax/user/{user_id}/profile/all",
-            ))
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<Response<User>>()
-            .await?;
-
-        let illusts = res
-            .body
-            .illusts
-            .keys()
-            .map(|illust_id| self.download_image(illust_id, Some(user_id.to_string())));
-
-        println!("{}", format!(
-            "Downloading {user_id}'s images, total: {}",
-            illusts.len()
-        ));
-
-        for task in futures::future::join_all(illusts).await.into_iter() {
-            if let Err(e) = task {
-                println!("{}", format!("{e:?}"));
-            }
-        }
-
-        Ok(())
-    }
-
-    async fn fetch_and_save_ugoira(&self, ugoira_id: &str, path: String) -> Result<()> {
-        let data = self.get_ugoira_meta(ugoira_id).await?;
-
-        self.fetch_and_save_image(data.original_src, path)
-            .await
-            .context("Failed to download ugoira zip")
-    }
 
     async fn fetch_and_save_image(&self, url: String, path: String) -> Result<()> {
         if fs::metadata(&path).await.is_ok() {
@@ -181,22 +131,6 @@ impl Pixiv {
         fs::write(path, bytes).await?;
 
         Ok(())
-    }
-
-    async fn get_ugoira_meta(&self, ugoira_id: &str) -> Result<Ugoira> {
-        let data = self
-            .client
-            .get(format!(
-                "https://www.pixiv.net/ajax/illust/{ugoira_id}/ugoira_meta?lang=en",
-            ))
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<Response<Ugoira>>()
-            .await?
-            .body;
-
-        Ok(data)
     }
 
     async fn get_illust(&self, illust_id: &str) -> Result<Illust> {
