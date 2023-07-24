@@ -44,7 +44,15 @@ pub enum Metatag {
     #[serde(alias="character")]
     Character(String),
     #[serde(alias="group")]
-    Group(String)
+    Group(String),
+    #[serde(alias="language")]
+    Language(String),
+    #[serde(alias="temp")]
+    Temp(String),
+    #[serde(alias="reclass")]
+    Reclass(String),
+    #[serde(alias="cosplayer")]
+    Cosplayer(String),
 }
 
 #[derive(Deserialize, Debug)]

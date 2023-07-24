@@ -37,6 +37,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                         let mut artist_tags = Vec::new();
                         let mut character_tags = Vec::new();
                         let mut group_tags = Vec::new();
+                        let mut language_tags = Vec::new();
+                        let mut temp_tags = Vec::new();
+                        let mut cosplayer_tags = Vec::new();
+                        let mut reclass_tags = Vec::new();
     
                         gallery_data.tags.iter().for_each(|t| {
                             match t {
@@ -48,6 +52,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 Metatag::Mixed(token) => mixed_tags.push(token.clone()),
                                 Metatag::Other(token) => other_tags.push(token.clone()),
                                 Metatag::Parody(token) => parody_tags.push(token.clone()),
+                                Metatag::Language(token) => language_tags.push(token.clone()),
+                                Metatag::Temp(token) => temp_tags.push(token.clone()),
+                                Metatag::Reclass(token) => reclass_tags.push(token.clone()),
+                                Metatag::Cosplayer(token) => cosplayer_tags.push(token.clone()),
                             }
                         });
     
@@ -60,11 +68,17 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 .title(gallery_data.title.clone())
                                 .field("Category", gallery_data.category.clone(), true)
                                 .url(x.get(0).unwrap().as_str().to_string());
+                                if !language_tags.is_empty() {
+                                    e.field("Language", language_tags.join(", "), true);
+                                }
                                 if !group_tags.is_empty() {
                                     e.field("Group", group_tags.join(", "), true);
                                 }
                                 if !artist_tags.is_empty() {
                                     e.field("Artist", artist_tags.join(", "), true);
+                                }
+                                if !cosplayer_tags.is_empty() {
+                                    e.field("Cosplay", cosplayer_tags.join(", "), true);
                                 }
                                 if !parody_tags.is_empty() {
                                     e.field("Parody", parody_tags.join(", "), true);
