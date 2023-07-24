@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize, Deserializer};
 use serde_json::{Value, Number}; // 1.0.69
 
-#[derive(Serialize)]
-struct APIPayload {
+#[derive(Serialize, Debug)]
+pub struct APIPayload {
     method: String,
     gidlist: Vec<Vec<Value>>,
     namespace: u32,
 }
 
 impl APIPayload {
-    fn new(gallery_id: u32, gallery_token: String) -> Self{
+    pub fn new(gallery_id: u32, gallery_token: String) -> Self{
         APIPayload {
             method: "gdata".to_string(),
             gidlist: {
@@ -28,8 +28,9 @@ impl APIPayload {
 
 
 #[derive(Deserialize, Debug)]
-enum Metatag {
-    Unlisted(String),
+pub enum Metatag {
+    #[serde(alias="mixed")]
+    Mixed(String),
     #[serde(alias="parody")]
     Parody(String),
     #[serde(alias="male")]
@@ -47,25 +48,25 @@ enum Metatag {
 }
 
 #[derive(Deserialize, Debug)]
-struct GalleryMetaDataList {
+pub struct GalleryMetaDataList {
     #[serde(rename(deserialize = "gmetadata"))]
-    items: Vec<GalleryMetaData>
+    pub items: Vec<GalleryMetaData>
 }
 
 #[derive(Deserialize, Debug)]
-struct GalleryMetaData {
-    gid: u32,
-    token: String,
-    title: String,
-    category: String,
+pub struct GalleryMetaData {
+    pub gid: u32,
+    pub token: String,
+    pub title: String,
+    pub category: String,
     #[serde(rename(deserialize = "thumb"))]
-    thumbnail: String,
+    pub thumbnail: String,
     #[serde(rename(deserialize = "filecount"))]
     #[serde(deserialize_with = "from_str")]
-    file_count: u32,
-    uploader: String,
+    pub file_count: u32,
+    pub uploader: String,
     #[serde(deserialize_with = "from_tag")]
-    tags: Vec<Metatag>
+    pub tags: Vec<Metatag>
 }
 
 fn from_str<'de, T, D>(de: D) -> Result<T, D::Error>

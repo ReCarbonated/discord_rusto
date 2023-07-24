@@ -10,6 +10,7 @@ pub(crate) mod pixiv;
 pub(crate) mod tiktok;
 pub(crate) mod vt_tiktok;
 pub(crate) mod twitter;
+pub(crate) mod exhentai;
 
 pub struct Listener {
     pub name: String,
@@ -39,6 +40,9 @@ pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &HashMap<Str
                 "vt_tiktok" => {
                     vt_tiktok::handler(&ctx, &msg).await;
                 },
+                "exhentai" => {
+                    exhentai::handler(&ctx, &msg).await;
+                }
                 _ => {}
             }
         }
@@ -55,6 +59,7 @@ pub fn gen_handlers() -> HashMap<String, Listener> {
         collect.push(instagram::enroll());
         collect.push(pixiv::enroll());
         collect.push(vt_tiktok::enroll());
+        collect.push(exhentai::enroll());
         collect
     }
     .into_iter()
