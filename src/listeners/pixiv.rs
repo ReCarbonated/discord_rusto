@@ -51,7 +51,9 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             }
                         }
 
-                        let mut images = paths.iter().take(4);
+                        let mut images = paths.iter().take(4).collect::<Vec<&PathBuf>>();
+                        images.sort();
+                        let mut images = images.iter();
 
                         // Build a message object to send to channel
                         let _res = msg

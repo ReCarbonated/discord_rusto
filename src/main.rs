@@ -1,5 +1,6 @@
 use dotenvy::dotenv;
 use chrono_tz::US::Pacific;
+use serenity::model::prelude::{ChannelCategory, Channel};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -118,7 +119,11 @@ impl EventHandler for Handler {
         parse_message(&msg, &ctx).await;
     }
 
-    async fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        match ctx.http.get_channel(192772727281680385).await.unwrap() {
+            Channel::Private(channel) => {let _ = channel.say(ctx.http, "Loaded").await;}, 
+            _ => {},
+        }
         println!("{} is connected!", ready.user.name);
     }
 }

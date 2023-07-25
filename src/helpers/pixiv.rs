@@ -125,11 +125,11 @@ impl Pixiv {
             return Ok(());
         }
 
-        println!("{}", format!("Downloading {path}"));
+        // println!("{}", format!("Downloading {path}"));
 
         let bytes = self.fetch_bytes(&url).await?;
 
-        println!("{}", format!("Saving {path}"));
+        // println!("{}", format!("Saving {path}"));
 
         fs::write(path, bytes).await?;
 
