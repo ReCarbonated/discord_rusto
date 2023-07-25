@@ -67,17 +67,19 @@ impl Pixiv {
     }
 
     pub async fn download_image(&self, illust_id: &str, author: Option<String>) -> Result<Illust> {
+        println!("Prepping download of illust info");
         let illust = self.get_illust(illust_id.clone()).await?;
+        println!("Finished download of illust info");
 
         let mut page_count = illust.page_count;
         if page_count > 4 {
             page_count = 4
         }
 
-        println!("{}", format!(
-            "Fetching images of {illust_id} ({} pages)",
-            page_count
-        ));
+        // println!("{}", format!(
+        //     "Fetching images of {illust_id} ({} pages)",
+        //     page_count
+        // ));
 
         let base_url = get_base_path(illust.urls.original.clone());
 
@@ -111,7 +113,7 @@ impl Pixiv {
             _ => bail!("Unsupported illust type: {}, skipping", illust.illust_type),
         };
 
-        println!("{}", format!("Done! {full_path}"));
+        // println!("{}", format!("Done! {full_path}"));
 
         Ok(illust)
     }

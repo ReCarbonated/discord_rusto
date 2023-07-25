@@ -27,6 +27,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
     match RE2.captures(&msg.content) {
         Some(x) => match x.get(8) {
             Some(artwork_id) => {
+                println!("[pixiv][handler] Found a regex match: {}", artwork_id.as_str());
                 let data = ctx.data.read().await;
                 let pixiv_client = data
                     .get::<PixivClientHold>()
@@ -65,7 +66,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     match images.next() {
                                         Some(image) => {
                                             let image = image.file_name().unwrap().to_str().unwrap();
-                                            println!("{}", format!("attachment://{}", image));
+                                            // println!("{}", format!("attachment://{}", image));
                                             e.attachment(format!("{}", image));
                                         }
                                         _ => {
