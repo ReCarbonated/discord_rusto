@@ -1,6 +1,7 @@
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
+use tokio::time::{Duration, sleep};
 
 pub async fn message_fixer(
     ctx: &Context,
@@ -31,6 +32,7 @@ pub async fn message_fixer(
                     msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
 
                     if delete_embed {
+                        sleep(Duration::from_secs(5)).await;
                         let mut message = msg.clone();
                         match message.suppress_embeds(&ctx.http).await {
                             Ok(_) => {

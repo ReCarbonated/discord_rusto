@@ -4,6 +4,7 @@ use serenity::client::Context;
 use serenity::model::channel::Message;
 use std::path::PathBuf;
 use std::{env, fs};
+use tokio::time::{Duration, sleep};
 
 // use super::generic::message_fixer;
 use super::Listener;
@@ -51,6 +52,12 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             }
                         }
 
+                        let mut image_count = "".to_string();
+                        if paths.len() > 4 {
+                            image_count = format!(" - {} images", paths.len());
+                        }
+                        
+
                         let mut images = paths.iter().take(4).collect::<Vec<&PathBuf>>();
                         images.sort();
                         let mut images = images.iter();
@@ -62,7 +69,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 // construct new iter for images because of embed format
                                 m.add_embed(|e| {
                                     e.author(|a| a.name(illust.user_name))
-                                        .title(illust.title);
+                                        .title(format!("{}{}", illust.title, image_count));
 
                                     // Error handling on next value
                                     match images.next() {
@@ -102,6 +109,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                         // Now delete the files that you just downloaded
                         let _ = fs::remove_dir_all(format!("./{}", artwork_id.as_str()));
 
+                        sleep(Duration::from_secs(5)).await;
                         let mut message = msg.clone();
                         match message.suppress_embeds(&ctx.http).await {
                             Ok(_) => {

@@ -4,6 +4,7 @@ use serde::{Deserialize, Deserializer};
 use serenity::client::Context;
 use serenity::model::channel::Message;
 use std::{collections::HashMap, env};
+use tokio::time::{Duration, sleep};
 
 use crate::WebClient;
 
@@ -153,7 +154,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     })
                                     .await;
 
-
+                                sleep(Duration::from_secs(5)).await;
                                 let mut message = msg.clone();
                                 match message.suppress_embeds(&ctx.http).await {
                                     Ok(_) => {
