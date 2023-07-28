@@ -151,6 +151,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                         }
                                         // Append reply to message
                                         m.reference_message((msg.channel_id, msg.id));
+                                        m.allowed_mentions(|am| {
+                                            am.replied_user(false);
+                                            am
+                                        });
                                         m
                                     })
                                     .await;

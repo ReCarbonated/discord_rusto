@@ -29,9 +29,9 @@ pub async fn message_fixer(
                         post_fix.as_str(),
                         spoiler_wrap
                     );
-                    // msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
+                    msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
 
-                    let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
+                    // let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
 
                     if delete_embed {
                         sleep(Duration::from_secs(5)).await;
