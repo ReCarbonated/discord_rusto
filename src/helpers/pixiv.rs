@@ -4,8 +4,6 @@
 // Looks to do a bunch of things that I need
 
 use anyhow::{anyhow, bail, Context, Result};
-use serenity::futures;
-use tokio::fs;
 
 use crate::types::pixiv::{Illust, Response};
 
@@ -64,9 +62,9 @@ impl Pixiv {
         Ok(Pixiv { client })
     }
 
-    pub async fn download_image(&self, illust_id: &str, author: Option<String>) -> Result<Illust> {
+    pub async fn download_image_data(&self, illust_id: &str) -> Result<(Vec<Vec<u8>>, Illust)> {
         println!("Prepping download of illust info");
-        let illust = self.get_illust(illust_id.clone()).await?;
+        let illust = self.get_illust(illust_id).await?;
         println!("Finished download of illust info");
 
         let mut page_count = illust.page_count;
@@ -74,62 +72,27 @@ impl Pixiv {
             page_count = 4
         }
 
-        // println!("{}", format!(
-        //     "Fetching images of {illust_id} ({} pages)",
-        //     page_count
-        // ));
-
         let base_url = get_base_path(illust.urls.original.clone());
 
         let ext = get_ext(illust.urls.original.clone());
-
-        let full_path = match author {
-            Some(path) => format!("u_{path}/i_{illust_id}"),
-            None => format!("{illust_id}"),
-        };
-
-        fs::create_dir_all(full_path.clone()).await?;
+        let mut output = Vec::new();
 
         match illust.illust_type {
             // map each page to a future that downloads the image
             0 => {
-                let downloads = (0..page_count).into_iter().map(|page| {
-                    self.fetch_and_save_image(
-                        format!("{base_url}/{illust_id}_p{page}.{ext}"),
-                        format!("{full_path}/p{page}.{ext}"),
-                    )
-                });
-
-                for task in futures::future::join_all(downloads).await.into_iter() {
-                    if let Err(e) = task {
-                        println!("{}", format!("{e:?}"));
-                    }
+                for page_number in 0..page_count {
+                    println!("[pixiv][download_image_data] Downloading image, {}", page_number);
+                    output.push(self.fetch_bytes(format!("{base_url}/{illust_id}_p{page_number}.{ext}").as_str()).await.unwrap());
                 }
             }
 
             _ => bail!("Unsupported illust type: {}, skipping", illust.illust_type),
         };
 
+
         // println!("{}", format!("Done! {full_path}"));
 
-        Ok(illust)
-    }
-
-    async fn fetch_and_save_image(&self, url: String, path: String) -> Result<()> {
-        if fs::metadata(&path).await.is_ok() {
-            println!("{}", format!("{path} already exists, skipping"));
-            return Ok(());
-        }
-
-        // println!("{}", format!("Downloading {path}"));
-
-        let bytes = self.fetch_bytes(&url).await?;
-
-        // println!("{}", format!("Saving {path}"));
-
-        fs::write(path, bytes).await?;
-
-        Ok(())
+        Ok((output, illust))
     }
 
     async fn get_illust(&self, illust_id: &str) -> Result<Illust> {

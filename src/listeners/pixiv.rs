@@ -1,8 +1,8 @@
 use crate::PixivClientHold;
+use crate::helpers::pixiv;
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
-use std::path::PathBuf;
 use std::{env, fs};
 use tokio::time::{sleep, Duration};
 
@@ -38,31 +38,21 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                     .expect("Expected Pixiv Client in TypeMap")
                     .clone();
                 match pixiv_client
-                    .download_image(artwork_id.as_str(), Option::None)
+                    .download_image_data(artwork_id.as_str())
                     .await
                 {
-                    Ok(illust) => {
-                        let mut paths = Vec::<PathBuf>::new();
-                        for path in fs::read_dir(format!("./{}", artwork_id.as_str())).unwrap() {
-                            match path {
-                                Ok(path) => {
-                                    let temp = path.path();
-                                    paths.push(temp);
-                                }
-                                Err(_) => {
-                                    println!("Something fucking died here")
-                                }
-                            }
-                        }
+                    Ok((images, illust)) => {
 
-                        let mut image_count = "".to_string();
-                        if paths.len() > 4 {
-                            image_count = format!(" - {} images", paths.len());
+                        let mut image_count: String = "".to_string();
+                        if illust.page_count > 1 {
+                            image_count = format!(" - {} images", illust.page_count);
                         }
+                        let ext = pixiv::get_ext(illust.urls.original.clone());
 
-                        let mut images = paths.iter().take(4).collect::<Vec<&PathBuf>>();
-                        images.sort();
-                        let mut images = images.iter();
+                        let filenames: Vec<String> = (0..images.len()).into_iter().map(|e| format!("p{e}.{ext}")).collect();
+
+                        // Build zip iter to map name to image
+                        let mut dataset = images.iter().zip(filenames.clone());
 
                         // Build a message object to send to channel
                         let _res = msg
@@ -74,12 +64,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                         .title(format!("{}{}", illust.title, image_count));
 
                                     // Error handling on next value
-                                    match images.next() {
-                                        Some(image) => {
-                                            let image =
-                                                image.file_name().unwrap().to_str().unwrap();
+                                    match dataset.next() {
+                                        Some((_, filename)) => {
                                             // println!("{}", format!("attachment://{}", image));
-                                            e.attachment(format!("{}", image));
+                                            e.attachment(format!("{}", filename));
                                         }
                                         _ => {
                                             println!("huh");
@@ -93,11 +81,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 });
 
                                 // For any leftover images, append more embeds with same url as above
-                                for image in images {
-                                    let image = image.file_name().unwrap().to_str().unwrap();
-                                    println!("{}", format!("attachment://{}", image));
+                                for (_, filename) in dataset {
+                                    println!("{}", format!("attachment://{}", filename));
                                     m.add_embed(|e| {
-                                        e.attachment(format!("{}", image)).url(
+                                        e.attachment(format!("{}", filename)).url(
                                             x.get(0).expect("Something actually here").as_str(),
                                         )
                                     });
@@ -108,13 +95,12 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     am.replied_user(false);
                                     am
                                 });
-                                m.add_files(paths.iter().map(|e| e.as_path()));
+                                for (image, filename) in images.iter().zip(filenames) {
+                                    m.add_file((image.as_slice(), filename.as_str()));
+                                }
                                 m
-                            })
-                            .await;
-
-                        // Now delete the files that you just downloaded
-                        let _ = fs::remove_dir_all(format!("./{}", artwork_id.as_str()));
+                            }
+                        ).await;
 
                         sleep(Duration::from_secs(5)).await;
                         let mut message = msg.clone();
@@ -128,7 +114,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                         }
                     }
                     Err(err) => {
-                        println!("Failed to download, {:?}", err)
+                        println!("Failed to download, {:?}", err);
                     }
                 }
             }
