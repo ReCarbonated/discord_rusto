@@ -104,7 +104,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     e
                                 });
 
-                                m.reference_message((msg.channel_id, msg.id));
+                                // m.reference_message((msg.channel_id, msg.id));
                                 m
                             })
                             .await;

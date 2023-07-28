@@ -103,7 +103,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     });
                                 }
                                 // Append reply to message
-                                m.reference_message((msg.channel_id, msg.id));
+                                // m.reference_message((msg.channel_id, msg.id));
                                 m.add_files(paths.iter().map(|e| e.as_path()));
                                 m
                             })
