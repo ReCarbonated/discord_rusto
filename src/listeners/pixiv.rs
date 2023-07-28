@@ -4,7 +4,7 @@ use serenity::client::Context;
 use serenity::model::channel::Message;
 use std::path::PathBuf;
 use std::{env, fs};
-use tokio::time::{Duration, sleep};
+use tokio::time::{sleep, Duration};
 
 // use super::generic::message_fixer;
 use super::Listener;
@@ -28,7 +28,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
     match RE2.captures(&msg.content) {
         Some(x) => match x.get(8) {
             Some(artwork_id) => {
-                println!("[pixiv][handler] Found a regex match: {}", artwork_id.as_str());
+                println!(
+                    "[pixiv][handler] Found a regex match: {}",
+                    artwork_id.as_str()
+                );
                 let data = ctx.data.read().await;
                 let pixiv_client = data
                     .get::<PixivClientHold>()
@@ -56,7 +59,6 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                         if paths.len() > 4 {
                             image_count = format!(" - {} images", paths.len());
                         }
-                        
 
                         let mut images = paths.iter().take(4).collect::<Vec<&PathBuf>>();
                         images.sort();
@@ -74,7 +76,8 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     // Error handling on next value
                                     match images.next() {
                                         Some(image) => {
-                                            let image = image.file_name().unwrap().to_str().unwrap();
+                                            let image =
+                                                image.file_name().unwrap().to_str().unwrap();
                                             // println!("{}", format!("attachment://{}", image));
                                             e.attachment(format!("{}", image));
                                         }

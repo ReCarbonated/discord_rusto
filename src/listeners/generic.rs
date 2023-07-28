@@ -1,7 +1,7 @@
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
-use tokio::time::{Duration, sleep};
+use tokio::time::{sleep, Duration};
 
 pub async fn message_fixer(
     ctx: &Context,
@@ -10,7 +10,7 @@ pub async fn message_fixer(
     url_fix: &str,
     group: usize,
     spoilers: (usize, usize),
-    delete_embed: bool
+    delete_embed: bool,
 ) {
     match re.captures(&msg.content) {
         Some(x) => {

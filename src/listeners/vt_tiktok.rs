@@ -10,7 +10,8 @@ use serenity::model::channel::Message;
 lazy_static! {
     static ref RE: Regex = Regex::new(
         r"(\|\|)?http(s)*:\/\/(vt\.)?(tiktok.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
-    ).unwrap();
+    )
+    .unwrap();
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {

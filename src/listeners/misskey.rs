@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer};
 use serenity::client::Context;
 use serenity::model::channel::Message;
 use std::{collections::HashMap, env};
-use tokio::time::{Duration, sleep};
+use tokio::time::{sleep, Duration};
 
 use crate::WebClient;
 
@@ -52,11 +52,12 @@ struct File {
 
 pub async fn handler(ctx: &Context, msg: &Message) {
     match RE.captures(&msg.content) {
-        Some(x) => match x.get(6) {
-            Some(note_id) => {
-                let mut json = HashMap::new();
-                json.insert("noteId", note_id.as_str());
-                match ctx
+        Some(x) => {
+            match x.get(6) {
+                Some(note_id) => {
+                    let mut json = HashMap::new();
+                    json.insert("noteId", note_id.as_str());
+                    match ctx
                     .data
                     .read()
                     .await
@@ -172,12 +173,13 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                     },
                     Err(err) => println!("[misskey][handler]: Error trying to access api with id {} and with: {}", note_id.as_str(), err),
                 }
+                }
+                None => {
+                    // Didn't find the group somehow?, might not be a note or something
+                    println!("Didn't find a match with the regex, weird? {:?}", x);
+                }
             }
-            None => {
-                // Didn't find the group somehow?, might not be a note or something
-                println!("Didn't find a match with the regex, weird? {:?}", x);
-            }
-        },
+        }
         None => {
             // Didn't find a regex match
         }

@@ -1,5 +1,5 @@
-pub mod pixiv;
 pub mod exhentai;
+pub mod pixiv;
 
-pub use pixiv::*;
 pub use exhentai::*;
+pub use pixiv::*;

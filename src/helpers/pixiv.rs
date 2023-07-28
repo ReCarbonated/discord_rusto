@@ -1,4 +1,4 @@
-// Stolen from github 
+// Stolen from github
 // https://github.com/pxseu/zettai-ryouiki
 
 // Looks to do a bunch of things that I need
@@ -7,13 +7,11 @@ use anyhow::{anyhow, bail, Context, Result};
 use serenity::futures;
 use tokio::fs;
 
-
 use crate::types::pixiv::{Illust, Response};
 
 const BASE_HOSTNAME: &str = "www.pixiv.net";
-const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0";
-
-
+const USER_AGENT: &str =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0";
 
 pub fn get_base_path(original_url: String) -> String {
     let mut base_url_split = original_url.split("/").collect::<Vec<&str>>();
@@ -92,7 +90,6 @@ impl Pixiv {
 
         fs::create_dir_all(full_path.clone()).await?;
 
-
         match illust.illust_type {
             // map each page to a future that downloads the image
             0 => {
@@ -117,7 +114,6 @@ impl Pixiv {
 
         Ok(illust)
     }
-
 
     async fn fetch_and_save_image(&self, url: String, path: String) -> Result<()> {
         if fs::metadata(&path).await.is_ok() {
@@ -156,11 +152,13 @@ impl Pixiv {
             .get(format!("https://www.pixiv.net/ajax/illust/{illust_id}"))
             .send()
             .await?
-            .error_for_status()?.text().await.unwrap();
+            .error_for_status()?
+            .text()
+            .await
+            .unwrap();
 
         Ok(data)
     }
-
 
     async fn fetch_bytes(&self, url: &str) -> Result<Vec<u8>> {
         let data = self

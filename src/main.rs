@@ -1,13 +1,13 @@
-use dotenvy::dotenv;
 use chrono_tz::US::Pacific;
-use serenity::model::prelude::{ChannelCategory, Channel};
+use dotenvy::dotenv;
+use serenity::model::prelude::Channel;
 
 use std::collections::{HashMap, HashSet};
 use std::env;
 pub mod commands;
 pub mod helpers;
-pub mod types;
 mod listeners;
+pub mod types;
 use listeners::{check_parsers, Handler, Listener};
 
 use commands::*;
@@ -84,9 +84,9 @@ impl EventHandler for Handler {
                 .await
                 .unwrap_or("".to_string());
             let username = msg.author.name.clone();
-            
+
             let time = msg.timestamp.with_timezone(&Pacific).to_rfc3339();
-            
+
             if msg.content.is_empty() {
                 println!(
                     "[{}][{}]-[{}]-[{}]: {}",
@@ -121,8 +121,10 @@ impl EventHandler for Handler {
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         match ctx.http.get_channel(192772727281680385).await.unwrap() {
-            Channel::Private(channel) => {let _ = channel.say(ctx.http, "Loaded").await;}, 
-            _ => {},
+            Channel::Private(channel) => {
+                let _ = channel.say(ctx.http, "Loaded").await;
+            }
+            _ => {}
         }
         println!("{} is connected!", ready.user.name);
     }
@@ -161,7 +163,6 @@ async fn main() {
 
     // Build event handlers with variables
     let handler = Handler {};
-
 
     // Init the framework groups
     let framework = StandardFramework::new()

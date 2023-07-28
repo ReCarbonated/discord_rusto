@@ -3,14 +3,14 @@ use std::collections::HashMap;
 use serenity::client::Context;
 use serenity::model::channel::Message;
 
+pub(crate) mod exhentai;
 pub(crate) mod generic;
 pub(crate) mod instagram;
 pub(crate) mod misskey;
 pub(crate) mod pixiv;
 pub(crate) mod tiktok;
-pub(crate) mod vt_tiktok;
 pub(crate) mod twitter;
-pub(crate) mod exhentai;
+pub(crate) mod vt_tiktok;
 
 pub struct Listener {
     pub name: String,
@@ -36,10 +36,10 @@ pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &HashMap<Str
                 }
                 "twitter" => {
                     twitter::handler(&ctx, &msg).await;
-                },
+                }
                 "vt_tiktok" => {
                     vt_tiktok::handler(&ctx, &msg).await;
-                },
+                }
                 "exhentai" => {
                     exhentai::handler(&ctx, &msg).await;
                 }
@@ -48,7 +48,6 @@ pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &HashMap<Str
         }
     }
 }
-
 
 pub fn gen_handlers() -> HashMap<String, Listener> {
     let list_of_listeners: HashMap<String, Listener> = {

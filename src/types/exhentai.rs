@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize, Deserializer};
-use serde_json::{Value, Number}; // 1.0.69
+use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::{Number, Value}; // 1.0.69
 
 #[derive(Serialize, Debug)]
 pub struct APIPayload {
@@ -9,7 +9,7 @@ pub struct APIPayload {
 }
 
 impl APIPayload {
-    pub fn new(gallery_id: u32, gallery_token: String) -> Self{
+    pub fn new(gallery_id: u32, gallery_token: String) -> Self {
         APIPayload {
             method: "gdata".to_string(),
             gidlist: {
@@ -21,44 +21,43 @@ impl APIPayload {
                 nested.push(gidlist);
                 nested
             },
-            namespace: 1
+            namespace: 1,
         }
     }
 }
 
-
 #[derive(Deserialize, Debug)]
 pub enum Metatag {
-    #[serde(alias="mixed")]
+    #[serde(alias = "mixed")]
     Mixed(String),
-    #[serde(alias="parody")]
+    #[serde(alias = "parody")]
     Parody(String),
-    #[serde(alias="male")]
+    #[serde(alias = "male")]
     Male(String),
-    #[serde(alias="female")]
+    #[serde(alias = "female")]
     Female(String),
-    #[serde(alias="other")]
+    #[serde(alias = "other")]
     Other(String),
-    #[serde(alias="artist")]
+    #[serde(alias = "artist")]
     Artist(String),
-    #[serde(alias="character")]
+    #[serde(alias = "character")]
     Character(String),
-    #[serde(alias="group")]
+    #[serde(alias = "group")]
     Group(String),
-    #[serde(alias="language")]
+    #[serde(alias = "language")]
     Language(String),
-    #[serde(alias="temp")]
+    #[serde(alias = "temp")]
     Temp(String),
-    #[serde(alias="reclass")]
+    #[serde(alias = "reclass")]
     Reclass(String),
-    #[serde(alias="cosplayer")]
+    #[serde(alias = "cosplayer")]
     Cosplayer(String),
 }
 
 #[derive(Deserialize, Debug)]
 pub struct GalleryMetaDataList {
     #[serde(rename(deserialize = "gmetadata"))]
-    pub items: Vec<GalleryMetaData>
+    pub items: Vec<GalleryMetaData>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -74,7 +73,7 @@ pub struct GalleryMetaData {
     pub file_count: u32,
     pub uploader: String,
     #[serde(deserialize_with = "from_tag")]
-    pub tags: Vec<Metatag>
+    pub tags: Vec<Metatag>,
 }
 
 fn from_str<'de, T, D>(de: D) -> Result<T, D::Error>
@@ -93,9 +92,15 @@ where
     D: Deserializer<'de>,
 {
     let list_of_tags: Vec<&str> = Deserialize::deserialize(deserializer)?;
-    Ok(list_of_tags.iter().map(|e| {
-        let (meta, tag) = e.split_once(":").unwrap();
-        
-        serde_json::from_str::<Metatag>(format!("{{\"{}\": \"{}\"}}", meta.to_string(), tag.to_string()).as_str()).unwrap()
-    }).collect::<Vec<_>>())
+    Ok(list_of_tags
+        .iter()
+        .map(|e| {
+            let (meta, tag) = e.split_once(":").unwrap();
+
+            serde_json::from_str::<Metatag>(
+                format!("{{\"{}\": \"{}\"}}", meta.to_string(), tag.to_string()).as_str(),
+            )
+            .unwrap()
+        })
+        .collect::<Vec<_>>())
 }

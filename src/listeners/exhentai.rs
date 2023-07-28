@@ -5,7 +5,10 @@ use serenity::client::Context;
 use serenity::model::channel::Message;
 use std::env;
 
-use crate::{types::{APIPayload, GalleryMetaDataList, Metatag}, WebClient};
+use crate::{
+    types::{APIPayload, GalleryMetaDataList, Metatag},
+    WebClient,
+};
 
 use super::Listener;
 
@@ -25,7 +28,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             gallery_id.as_str().parse::<u32>().unwrap(),
                             gallery_token.as_str().to_string(),
                         );
-    
+
                         let api_resp = send_payload(ctx, json_payload).await.unwrap();
                         let gallery_data = api_resp.items.first().unwrap();
                         // The lamest way to generate these pools
@@ -41,70 +44,70 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                         let mut temp_tags = Vec::new();
                         let mut cosplayer_tags = Vec::new();
                         let mut reclass_tags = Vec::new();
-    
-                        gallery_data.tags.iter().for_each(|t| {
-                            match t {
-                                Metatag::Artist(token) => artist_tags.push(token.clone()),
-                                Metatag::Character(token) => character_tags.push(token.clone()),
-                                Metatag::Female(token) => female_tags.push(token.clone()),
-                                Metatag::Group(token) => group_tags.push(token.clone()),
-                                Metatag::Male(token) => male_tags.push(token.clone()),
-                                Metatag::Mixed(token) => mixed_tags.push(token.clone()),
-                                Metatag::Other(token) => other_tags.push(token.clone()),
-                                Metatag::Parody(token) => parody_tags.push(token.clone()),
-                                Metatag::Language(token) => language_tags.push(token.clone()),
-                                Metatag::Temp(token) => temp_tags.push(token.clone()),
-                                Metatag::Reclass(token) => reclass_tags.push(token.clone()),
-                                Metatag::Cosplayer(token) => cosplayer_tags.push(token.clone()),
-                            }
+
+                        gallery_data.tags.iter().for_each(|t| match t {
+                            Metatag::Artist(token) => artist_tags.push(token.clone()),
+                            Metatag::Character(token) => character_tags.push(token.clone()),
+                            Metatag::Female(token) => female_tags.push(token.clone()),
+                            Metatag::Group(token) => group_tags.push(token.clone()),
+                            Metatag::Male(token) => male_tags.push(token.clone()),
+                            Metatag::Mixed(token) => mixed_tags.push(token.clone()),
+                            Metatag::Other(token) => other_tags.push(token.clone()),
+                            Metatag::Parody(token) => parody_tags.push(token.clone()),
+                            Metatag::Language(token) => language_tags.push(token.clone()),
+                            Metatag::Temp(token) => temp_tags.push(token.clone()),
+                            Metatag::Reclass(token) => reclass_tags.push(token.clone()),
+                            Metatag::Cosplayer(token) => cosplayer_tags.push(token.clone()),
                         });
-    
+
                         // Build embed now
-    
-                        let _res =  msg.channel_id.send_message(&ctx.http, |m| {
-    
-                            m.add_embed(|e| {
-                                e.image(gallery_data.thumbnail.clone())
-                                .title(gallery_data.title.clone())
-                                .field("Category", gallery_data.category.clone(), true)
-                                .url(x.get(0).unwrap().as_str().to_string());
-                                if !language_tags.is_empty() {
-                                    e.field("Language", language_tags.join(", "), true);
-                                }
-                                if !group_tags.is_empty() {
-                                    e.field("Group", group_tags.join(", "), true);
-                                }
-                                if !artist_tags.is_empty() {
-                                    e.field("Artist", artist_tags.join(", "), true);
-                                }
-                                if !cosplayer_tags.is_empty() {
-                                    e.field("Cosplay", cosplayer_tags.join(", "), true);
-                                }
-                                if !parody_tags.is_empty() {
-                                    e.field("Parody", parody_tags.join(", "), true);
-                                }
-                                if !character_tags.is_empty() {
-                                    e.field("Character", character_tags.join(", "), true);
-                                }
-                                if !female_tags.is_empty() {
-                                    e.field("Female", female_tags.join(", "), true);
-                                }
-                                if !male_tags.is_empty() {
-                                    e.field("Male", male_tags.join(", "), true);
-                                }
-                                if !mixed_tags.is_empty() {
-                                    e.field("Mixed", mixed_tags.join(", "), true);
-                                }
-                                if !other_tags.is_empty() {
-                                    e.field("Other", other_tags.join(", "), true);
-                                }
-    
-                                e                            
-                            });
-    
-                            m.reference_message((msg.channel_id, msg.id));
-                            m
-                        }).await;
+
+                        let _res = msg
+                            .channel_id
+                            .send_message(&ctx.http, |m| {
+                                m.add_embed(|e| {
+                                    e.image(gallery_data.thumbnail.clone())
+                                        .title(gallery_data.title.clone())
+                                        .field("Category", gallery_data.category.clone(), true)
+                                        .url(x.get(0).unwrap().as_str().to_string());
+                                    if !language_tags.is_empty() {
+                                        e.field("Language", language_tags.join(", "), true);
+                                    }
+                                    if !group_tags.is_empty() {
+                                        e.field("Group", group_tags.join(", "), true);
+                                    }
+                                    if !artist_tags.is_empty() {
+                                        e.field("Artist", artist_tags.join(", "), true);
+                                    }
+                                    if !cosplayer_tags.is_empty() {
+                                        e.field("Cosplay", cosplayer_tags.join(", "), true);
+                                    }
+                                    if !parody_tags.is_empty() {
+                                        e.field("Parody", parody_tags.join(", "), true);
+                                    }
+                                    if !character_tags.is_empty() {
+                                        e.field("Character", character_tags.join(", "), true);
+                                    }
+                                    if !female_tags.is_empty() {
+                                        e.field("Female", female_tags.join(", "), true);
+                                    }
+                                    if !male_tags.is_empty() {
+                                        e.field("Male", male_tags.join(", "), true);
+                                    }
+                                    if !mixed_tags.is_empty() {
+                                        e.field("Mixed", mixed_tags.join(", "), true);
+                                    }
+                                    if !other_tags.is_empty() {
+                                        e.field("Other", other_tags.join(", "), true);
+                                    }
+
+                                    e
+                                });
+
+                                m.reference_message((msg.channel_id, msg.id));
+                                m
+                            })
+                            .await;
                     }
                 }
                 None => {
@@ -147,7 +150,10 @@ async fn send_payload(ctx: &Context, payload: APIPayload) -> Result<GalleryMetaD
         .clone()
         .post("https://api.e-hentai.org/api.php")
         .json(&payload)
-        .send().await?.json::<GalleryMetaDataList>().await?;
+        .send()
+        .await?
+        .json::<GalleryMetaDataList>()
+        .await?;
 
     Ok(output)
 }

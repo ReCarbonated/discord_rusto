@@ -21,7 +21,7 @@ pub struct Illust {
     pub urls: Urls,
     pub illust_type: u32,
     pub title: String,
-    pub user_name: String
+    pub user_name: String,
 }
 
 #[derive(Deserialize, Debug)]
