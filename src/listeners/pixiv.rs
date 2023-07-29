@@ -3,7 +3,7 @@ use crate::helpers::pixiv;
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
-use std::{env, fs};
+use std::env;
 use tokio::time::{sleep, Duration};
 
 // use super::generic::message_fixer;

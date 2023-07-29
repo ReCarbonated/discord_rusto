@@ -62,3 +62,11 @@ CREATE TABLE `Stickers` (
 	PRIMARY KEY (`id`),
 	UNIQUE KEY (`discord_id`)
 );
+
+CREATE TABLE `Settings` (
+	`id` int NOT NULL AUTO_INCREMENT COMMENT 'Primary Key',
+	`last_edit` datetime COMMENT 'Last Edit',
+	`guild_id` bigint unsigned NOT NULL COMMENT 'Guild ID',
+	`setting` JSON NOT NULL COMMENT 'JSON Payload',
+	PRIMARY KEY (`id`)
+);
