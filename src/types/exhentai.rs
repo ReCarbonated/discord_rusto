@@ -95,12 +95,14 @@ where
     Ok(list_of_tags
         .iter()
         .map(|e| {
-            let (meta, tag) = e.split_once(":").unwrap();
+            let (meta, tag) = e.split_once(":").expect("Some how fucked up splitting on a colon");
 
             serde_json::from_str::<Metatag>(
                 format!("{{\"{}\": \"{}\"}}", meta.to_string(), tag.to_string()).as_str(),
             )
-            .unwrap()
+            .unwrap_or(serde_json::from_str::<Metatag>(
+                format!("{{\"{}\": \"{}\"}}", "other", tag.to_string()).as_str(),
+            ).unwrap())
         })
         .collect::<Vec<_>>())
 }
