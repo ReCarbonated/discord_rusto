@@ -3,11 +3,8 @@ use crate::helpers::pixiv;
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
-use std::env;
 use tokio::time::{sleep, Duration};
 
-// use super::generic::message_fixer;
-use super::Listener;
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -127,19 +124,4 @@ pub async fn handler(ctx: &Context, msg: &Message) {
             // Didn't find a regex match
         }
     }
-}
-
-pub fn enroll() -> (String, Listener) {
-    let switch: bool = env::var("PIXIV_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-
-    (
-        "pixiv".to_string(),
-        Listener {
-            name: "pixiv".to_string(),
-            switch: switch.clone(),
-        },
-    )
 }

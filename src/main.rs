@@ -1,6 +1,6 @@
 use chrono_tz::US::Pacific;
 use dotenvy::dotenv;
-use serenity::model::prelude::{Channel, Guild};
+use serenity::model::prelude::{Guild, Channel};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -8,7 +8,7 @@ pub mod commands;
 pub mod helpers;
 mod listeners;
 pub mod types;
-use listeners::{check_parsers, Handler, Listener};
+use listeners::{check_parsers, Handler};
 
 use commands::*;
 use helpers::messages::parse_message;
@@ -29,7 +29,6 @@ use serenity::{
 
 use crate::helpers::Pixiv;
 
-struct MessageListener;
 struct WebClient;
 struct DbPool;
 struct Owner;
@@ -39,10 +38,6 @@ struct PixivClientHold;
 struct SettingsMap;
 impl TypeMapKey for SettingsMap {
     type Value = HashMap<u64, types::Setting>;
-}
-
-impl TypeMapKey for MessageListener {
-    type Value = HashMap<String, Listener>;
 }
 
 impl TypeMapKey for WebClient {
@@ -125,13 +120,13 @@ impl EventHandler for Handler {
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        // match ctx.http.get_channel(192772727281680385).await.unwrap() {
-        //     Channel::Private(channel) => {
-        //         let _ = channel.say(ctx.http, "Loaded").await;
-        //     }
-        //     _ => {}
-        // }
-        // println!("{} is connected!", ready.user.name);
+        match ctx.http.get_channel(192772727281680385).await.unwrap() {
+            Channel::Private(channel) => {
+                let _ = channel.say(ctx.http, "Loaded").await;
+            }
+            _ => {}
+        }
+        println!("{} is connected!", ready.user.name);
     }
 
     async fn guild_create(&self, ctx: Context, guild: Guild, is_new: bool) {
@@ -202,7 +197,6 @@ async fn main() {
     let settings_holder = types::settings::get_guild_settings(&database).await.unwrap();
     {
         let mut data = client.data.write().await;
-        data.insert::<MessageListener>(listeners::gen_handlers());
         data.insert::<WebClient>(reqwest::Client::new());
         data.insert::<DbPool>(database);
         data.insert::<Editors>(editors);

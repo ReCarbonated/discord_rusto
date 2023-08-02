@@ -3,14 +3,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
-use std::env;
-
 use crate::{
     types::{APIPayload, GalleryMetaDataList, Metatag},
     WebClient,
 };
-
-use super::Listener;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(
@@ -126,21 +122,6 @@ pub async fn handler(ctx: &Context, msg: &Message) {
             // Didn't find a regex match
         }
     }
-}
-
-pub fn enroll() -> (String, Listener) {
-    let switch: bool = env::var("EXHENTAI_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-
-    (
-        "exhentai".to_string(),
-        Listener {
-            name: "exhentai".to_string(),
-            switch: switch.clone(),
-        },
-    )
 }
 
 async fn send_payload(ctx: &Context, payload: APIPayload) -> Result<GalleryMetaDataList> {
