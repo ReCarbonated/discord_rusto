@@ -1,6 +1,6 @@
 use chrono_tz::US::Pacific;
 use dotenvy::dotenv;
-use serenity::model::prelude::Channel;
+use serenity::model::prelude::{Channel, Guild};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -35,6 +35,11 @@ struct DbPool;
 struct Owner;
 struct Editors;
 struct PixivClientHold;
+
+struct SettingsMap;
+impl TypeMapKey for SettingsMap {
+    type Value = HashMap<u64, types::Setting>;
+}
 
 impl TypeMapKey for MessageListener {
     type Value = HashMap<String, Listener>;
@@ -110,9 +115,9 @@ impl EventHandler for Handler {
 
         {
             let listners = ctx.data.read().await;
-            let listners: &HashMap<String, Listener> = listners
-                .get::<MessageListener>()
-                .expect("Expected MessageListener in TypeHash");
+            let listners = listners
+                .get::<SettingsMap>()
+                .expect("Expected SettingsMap in TypeHash");
             check_parsers(&ctx, &msg, listners).await;
         }
 
@@ -120,13 +125,19 @@ impl EventHandler for Handler {
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        match ctx.http.get_channel(192772727281680385).await.unwrap() {
-            Channel::Private(channel) => {
-                let _ = channel.say(ctx.http, "Loaded").await;
-            }
-            _ => {}
-        }
-        println!("{} is connected!", ready.user.name);
+        // match ctx.http.get_channel(192772727281680385).await.unwrap() {
+        //     Channel::Private(channel) => {
+        //         let _ = channel.say(ctx.http, "Loaded").await;
+        //     }
+        //     _ => {}
+        // }
+        // println!("{} is connected!", ready.user.name);
+    }
+
+    async fn guild_create(&self, ctx: Context, guild: Guild, is_new: bool) {
+        println!("Got into guild create");
+        types::settings::upsert_guild_setting(ctx, guild, is_new).await;
+
     }
 }
 
@@ -188,6 +199,7 @@ async fn main() {
 
     let pixiv_client = Pixiv::new(Option::from(pixiv_token)).expect("Need PIXIV_TOKEN for 18+");
 
+    let settings_holder = types::settings::get_guild_settings(&database).await.unwrap();
     {
         let mut data = client.data.write().await;
         data.insert::<MessageListener>(listeners::gen_handlers());
@@ -196,6 +208,7 @@ async fn main() {
         data.insert::<Editors>(editors);
         data.insert::<Owner>(owner);
         data.insert::<PixivClientHold>(pixiv_client);
+        data.insert::<SettingsMap>(settings_holder);
     }
 
     // start listening for events with 1 shard

@@ -1,24 +1,54 @@
 use std::collections::HashMap;
 use sqlx::types::Json;
-
+use serenity::client::Context;
+use serenity::model::guild::Guild;
 use serde::{Deserialize, Serialize};
-// Define settings via nested hashmap probably
-#[derive(Serialize, Deserialize, Debug)]
-struct Setting {
+use crate::{SettingsMap, DbPool};
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+pub struct Listeners {
     #[serde(default)] 
-    insta: bool,
+    pub insta: bool,
     #[serde(default)] 
-    pixiv: bool,
+    pub pixiv: bool,
     #[serde(default)] 
-    misskey: bool,
+    pub misskey: bool,
     #[serde(default)] 
-    twitter: bool,
+    pub twitter: bool,
     #[serde(default)] 
-    vt_tiktok: bool,
-    #[serde(default)] 
-    exhentai: bool,
+    pub vt_tiktok: bool,
     #[serde(default)]
-    admins: Vec<u64>
+    pub tiktok: bool,
+    #[serde(default)] 
+    pub exhentai: bool,
+}
+
+impl Listeners {
+    pub fn new() -> Self {
+        Listeners { insta: true, pixiv: true, misskey: true, twitter: true, vt_tiktok: true, exhentai: true, tiktok: true }
+    }
+}
+
+impl Default for Listeners {
+    fn default() -> Self {
+        Listeners { insta: true, pixiv: true, misskey: true, twitter: true, vt_tiktok: true, exhentai: true, tiktok: true }  
+    }
+}
+
+// Define settings via nested hashmap probably
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Setting {
+    #[serde(default)]
+    pub listeners: Listeners,
+    #[serde(default)]
+    pub admins: Vec<u64>,
+    #[serde(default)]
+    pub owner: u64
+}
+
+impl Setting {
+    pub fn new(owner: u64) -> Self {
+        Setting { listeners: Listeners::new(), admins: Vec::new(), owner}
+    }
 }
 
 #[derive(sqlx::FromRow)]
@@ -30,9 +60,10 @@ struct GuildSetting {
 
 // Deal with first insertion of data.
 // Convert into a json.string and then just insert
-async fn insert_guild_setting(guild_id: u64, setting: &Setting, pool: &sqlx::MySqlPool) {
-    let settings_payload = serde_json::to_string(setting).expect("Failed to somehow encode the settings");
-
+pub async fn insert_guild_setting(guild_id: u64, setting: &Setting, pool: &sqlx::MySqlPool) {
+    println!("{:?}", setting);
+    let settings_payload = serde_json::to_string(setting).unwrap();
+    println!("{:?}", settings_payload);
     let _ = sqlx::query!(
         "INSERT INTO `Settings` (`last_edit`, `guild_id`, `setting`) 
         VALUES (NOW(), ?, ?) ON DUPLICATE KEY UPDATE last_edit = NOW(), setting = ?",
@@ -42,12 +73,12 @@ async fn insert_guild_setting(guild_id: u64, setting: &Setting, pool: &sqlx::MyS
     )
     .execute(pool)
     .await
-    .expect("Failed to insert or update the new payload somehow");
+    .unwrap();
 }
 
 
-async fn get_guild_settings(pool: &sqlx::MySqlPool) -> Result<HashMap<u64, sqlx::types::Json<Setting>>, sqlx::Error> {
-    let mut output: HashMap<u64, sqlx::types::Json<Setting>> = HashMap::new();
+pub async fn get_guild_settings(pool: &sqlx::MySqlPool) -> Result<HashMap<u64, Setting>, sqlx::Error> {
+    let mut output: HashMap<u64, Setting> = HashMap::new();
 
     let sql_query = sqlx::query_as!(GuildSetting, r#"SELECT guild_id as id, setting as "setting: Json<Setting>" FROM Settings"#)
     .fetch_all(pool)
@@ -55,12 +86,49 @@ async fn get_guild_settings(pool: &sqlx::MySqlPool) -> Result<HashMap<u64, sqlx:
     .expect("Failed to query DB");
 
     for single_setting in sql_query {
-        output.insert(single_setting.id, single_setting.setting);
+        output.insert(single_setting.id, single_setting.setting.0);
     }
     Ok(output)
 }
 
+pub async fn upsert_guild_setting(ctx: Context, guild: Guild, is_new: bool) {
+    let mut to_sync = false;
+    let mut new_setting = Setting::new(0);
+    {
+        let data = ctx.data.read().await;
+        let settings = data.get::<SettingsMap>().unwrap();
+        if is_new || !settings.contains_key(guild.id.as_u64()){
+            new_setting = Setting::new(guild.owner_id.0);
+            to_sync = true;
+        } else {
+            println!("Got into entry");
+            // Get the entry of the guild.
+            if settings.get(guild.id.as_u64()).unwrap().owner != guild.owner_id.0 {
+                new_setting = settings.get(guild.id.as_u64()).unwrap().clone();
+                new_setting.owner = guild.owner_id.0;
+                to_sync = true;
+            } else {
+                println!("{:?}", settings.get(guild.id.as_u64()).unwrap());
+            }
+        }
+        if to_sync {
+            println!("Got into sync");
+            let pool = data.get::<DbPool>().unwrap();
+            println!("Got past pool");
+            println!("{:?}", new_setting);
+            insert_guild_setting(guild.id.0, &new_setting, pool).await;
+            println!("finished syncing");
+        }
+    }
 
+    if to_sync {
+        println!("Sync 2");
+        // New closure to remove last state
+        let mut data = ctx.data.write().await;
+        let settings = data.get_mut::<SettingsMap>().unwrap();
+        settings.insert(guild.id.0, new_setting);
+    }        
+}
 
 
 

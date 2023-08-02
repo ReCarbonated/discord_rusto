@@ -17,36 +17,17 @@ pub struct Listener {
     pub switch: bool,
 }
 
-pub async fn check_parsers(ctx: &Context, msg: &Message, listeners: &HashMap<String, Listener>) {
-    for (_, listener) in listeners.iter() {
-        if listener.switch {
-            match listener.name.as_str() {
-                "insta" => {
-                    instagram::handler(&ctx, &msg).await;
-                }
-                "tiktok" => {
-                    tiktok::handler(&ctx, &msg).await;
-                }
-                "pixiv" => {
-                    pixiv::handler(&ctx, &msg).await;
-                    // pixiv::fallback_handler(&ctx, &msg).await;
-                }
-                "misskey" => {
-                    misskey::handler(&ctx, &msg).await;
-                }
-                "twitter" => {
-                    twitter::handler(&ctx, &msg).await;
-                }
-                "vt_tiktok" => {
-                    vt_tiktok::handler(&ctx, &msg).await;
-                }
-                "exhentai" => {
-                    exhentai::handler(&ctx, &msg).await;
-                }
-                _ => {}
-            }
-        }
-    }
+pub async fn check_parsers(ctx: &Context, msg: &Message, settings: &HashMap<u64, crate::types::Setting>) {
+    // First get the settings info for the settings message 
+    let setting = settings.get(msg.guild_id.unwrap().as_u64()).unwrap().listeners;
+
+    if setting.insta {instagram::handler(&ctx, &msg).await;}
+    if setting.tiktok {tiktok::handler(&ctx, &msg).await;}
+    if setting.vt_tiktok {vt_tiktok::handler(&ctx, &msg).await;}
+    if setting.exhentai {exhentai::handler(&ctx, &msg).await;}
+    if setting.misskey {misskey::handler(&ctx, &msg).await;}
+    if setting.pixiv {pixiv::handler(&ctx, &msg).await;}
+    if setting.twitter {twitter::handler(&ctx, &msg).await;}
 }
 
 pub fn gen_handlers() -> HashMap<String, Listener> {
