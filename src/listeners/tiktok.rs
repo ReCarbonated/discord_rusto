@@ -1,7 +1,4 @@
-use std::env;
-
 use super::generic::message_fixer;
-use super::Listener;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serenity::client::Context;
@@ -15,19 +12,4 @@ lazy_static! {
 
 pub async fn handler(ctx: &Context, msg: &Message) {
     message_fixer(ctx, msg, &*RE, "https://tiktxk.com", 6, (1, 8), true).await;
-}
-
-pub fn enroll() -> (String, Listener) {
-    let tiktok_switch: bool = env::var("TIKTOK_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-
-    (
-        "tiktok".to_string(),
-        Listener {
-            name: "tiktok".to_string(),
-            switch: tiktok_switch.clone(),
-        },
-    )
 }

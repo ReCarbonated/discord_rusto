@@ -3,12 +3,10 @@ use regex::Regex;
 use serde::{Deserialize, Deserializer};
 use serenity::client::Context;
 use serenity::model::channel::Message;
-use std::{collections::HashMap, env};
+use std::collections::HashMap;
 use tokio::time::{sleep, Duration};
 
 use crate::WebClient;
-
-use super::Listener;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(
@@ -188,19 +186,4 @@ pub async fn handler(ctx: &Context, msg: &Message) {
             // Didn't find a regex match
         }
     }
-}
-
-pub fn enroll() -> (String, Listener) {
-    let switch: bool = env::var("MISSKEY_SWITCH")
-        .unwrap_or("true".to_string())
-        .parse()
-        .unwrap();
-
-    (
-        "misskey".to_string(),
-        Listener {
-            name: "misskey".to_string(),
-            switch: switch.clone(),
-        },
-    )
 }
