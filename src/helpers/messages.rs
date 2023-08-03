@@ -214,31 +214,21 @@ async fn insert_message(
 
 pub async fn parse_message(msg: &Message, ctx: &Context) {
     let user_id = msg.author.id.as_u64();
+    let pool;
     {
-        let mut data = ctx.data.write().await;
-        let pool = data
-            .get_mut::<DbPool>()
-            .expect("Expected DbPool in TypeMap");
-        insert_user(user_id, pool).await;
+        let data = ctx.data.read().await;
+        pool = data
+            .get::<DbPool>()
+            .expect("Expected DbPool in TypeMap").clone();
+        
     }
+    insert_user(user_id, &pool).await;
 
     let channel_id = msg.channel_id.as_u64();
-    {
-        let mut data = ctx.data.write().await;
-        let pool = data
-            .get_mut::<DbPool>()
-            .expect("Expected DbPool in TypeMap");
-        insert_channel(channel_id, pool).await;
-    }
+    insert_channel(channel_id, &pool).await;
 
     if let Some(guild_id) = msg.guild_id {
-        {
-            let mut data = ctx.data.write().await;
-            let pool = data
-                .get_mut::<DbPool>()
-                .expect("Expected DbPool in TypeMap");
-            insert_guild(guild_id.as_u64(), pool).await;
-        }
+        insert_guild(guild_id.as_u64(), &pool).await;
     }
 
     let re = Regex::new(r"<a?:\w*:(?P<id>\d*)>").unwrap();
@@ -248,12 +238,8 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
             let emote_id = id_str.as_str().parse::<u64>();
             match emote_id {
                 Ok(emote_id) => {
-                    let mut data = ctx.data.write().await;
-                    let pool = data
-                        .get_mut::<DbPool>()
-                        .expect("Expected DbPool in TypeMap");
-                    insert_emote(&emote_id, pool).await;
-                    insert_message(channel_id, user_id, &emote_id, msg, pool).await;
+                    insert_emote(&emote_id, &pool).await;
+                    insert_message(channel_id, user_id, &emote_id, msg, &pool).await;
                 }
                 Err(_error) => {}
             }
@@ -263,12 +249,8 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
     for sticker in &msg.sticker_items {
         let sticker_id = sticker.id.as_u64();
         {
-            let mut data = ctx.data.write().await;
-            let pool = data
-                .get_mut::<DbPool>()
-                .expect("Expected DbPool in TypeMap");
-            insert_sticker(sticker_id, pool).await;
-            insert_sticker_use(channel_id, user_id, sticker_id, msg, pool).await;
+            insert_sticker(sticker_id, &pool).await;
+            insert_sticker_use(channel_id, user_id, sticker_id, msg, &pool).await;
         }
     }
 }

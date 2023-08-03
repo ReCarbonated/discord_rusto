@@ -55,13 +55,13 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                 Some(note_id) => {
                     let mut json = HashMap::new();
                     json.insert("noteId", note_id.as_str());
-                    match ctx
-                    .data
-                    .read()
-                    .await
-                    .get::<WebClient>()
-                    .expect("Expected WebClient in TypeMap")
-                    .clone()
+                    let client;
+                    {
+                        let data = ctx.data.read().await;
+                        client = data.get::<WebClient>().expect("Expected WebClient from TypeMap").clone();
+                    }
+
+                    match client
                     .post("https://misskey.io/api/notes/show")
                     .json(&json)
                     .send()

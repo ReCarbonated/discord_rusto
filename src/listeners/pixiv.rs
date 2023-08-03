@@ -29,11 +29,14 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                     "[pixiv][handler] Found a regex match: {}",
                     artwork_id.as_str()
                 );
-                let data = ctx.data.read().await;
-                let pixiv_client = data
-                    .get::<PixivClientHold>()
-                    .expect("Expected Pixiv Client in TypeMap")
-                    .clone();
+                let pixiv_client;
+                {
+                    let data = ctx.data.read().await;
+                    pixiv_client = data
+                        .get::<PixivClientHold>()
+                        .expect("Expected Pixiv Client in TypeMap")
+                        .clone();
+                }
                 match pixiv_client
                     .download_image_data(artwork_id.as_str())
                     .await
