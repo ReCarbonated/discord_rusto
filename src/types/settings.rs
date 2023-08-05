@@ -131,7 +131,7 @@ pub async fn upsert_guild_setting(ctx: Context, guild: Guild, is_new: bool) {
         let settings;
         {
             let data = ctx.data.read().await;
-            settings = data.get::<SettingsMap>().unwrap();
+            settings = data.get::<SettingsMap>().unwrap().clone();
         }
         if is_new || !settings.contains_key(guild.id.as_u64()) {
             new_setting = Setting::new(guild.owner_id.0);
@@ -147,8 +147,13 @@ pub async fn upsert_guild_setting(ctx: Context, guild: Guild, is_new: bool) {
             }
         }
         if to_sync {
-            let pool = data.get::<DbPool>().unwrap();
-            insert_guild_setting(guild.id.0, &new_setting, pool).await;
+            let pool;
+            {
+                let data = ctx.data.read().await;
+                pool = data.get::<DbPool>().unwrap().clone();
+            }
+            
+            insert_guild_setting(guild.id.0, &new_setting, &pool).await;
         }
     }
 
