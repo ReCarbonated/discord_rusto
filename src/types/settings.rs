@@ -128,8 +128,11 @@ pub async fn upsert_guild_setting(ctx: Context, guild: Guild, is_new: bool) {
     let mut to_sync = false;
     let mut new_setting = Setting::new(0);
     {
-        let data = ctx.data.read().await;
-        let settings = data.get::<SettingsMap>().unwrap();
+        let settings;
+        {
+            let data = ctx.data.read().await;
+            settings = data.get::<SettingsMap>().unwrap();
+        }
         if is_new || !settings.contains_key(guild.id.as_u64()) {
             new_setting = Setting::new(guild.owner_id.0);
             to_sync = true;
