@@ -108,13 +108,13 @@ impl EventHandler for Handler {
             }
         }
 
-        {
+        let listeners = {
             let listners = ctx.data.read().await;
-            let listners = listners
+            listners
                 .get::<SettingsMap>()
-                .expect("Expected SettingsMap in TypeHash");
-            check_parsers(&ctx, &msg, listners).await;
-        }
+                .expect("Expected SettingsMap in TypeHash").clone()
+        };
+        check_parsers(&ctx, &msg, &listeners).await;
 
         parse_message(&msg, &ctx).await;
     }

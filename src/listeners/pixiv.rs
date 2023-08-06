@@ -29,14 +29,13 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                     "[pixiv][handler] Found a regex match: {}",
                     artwork_id.as_str()
                 );
-                let pixiv_client;
-                {
+                let pixiv_client = {
                     let data = ctx.data.read().await;
-                    pixiv_client = data
+                    data
                         .get::<PixivClientHold>()
                         .expect("Expected Pixiv Client in TypeMap")
-                        .clone();
-                }
+                        .clone()
+                };
                 match pixiv_client
                     .download_image_data(artwork_id.as_str())
                     .await
@@ -109,18 +108,18 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 println!("[pixiv][handler]: Removed embed");
                             }
                             Err(_) => {
-                                println!("[pixiv][handler]: Failed to remove, no perms");
+                                eprintln!("[pixiv][handler]: Failed to remove, no perms");
                             }
                         }
                     }
                     Err(err) => {
-                        println!("Failed to download, {:?}", err);
+                        eprintln!("Failed to download, {:?}", err);
                     }
                 }
             }
             None => {
                 // Didn't find the group somehow?, might not be a note or something
-                println!("Didn't find a match with the regex, weird? {:?}", x);
+                eprintln!("Didn't find a match with the regex, weird? {:?}", x);
             }
         },
         None => {

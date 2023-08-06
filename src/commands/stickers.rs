@@ -41,7 +41,7 @@ async fn sticker_message(ctx: &Context, msg: &Message, mut args: Args) -> Comman
             .await?;
         }
         Err(_) => {
-            println!("Failed to parse message to get sticker");
+            eprintln!("Failed to parse message to get sticker");
             msg.reply(&ctx.http, "Failed to grab message with supplied id and/or channel_id, might need to specify them.").await.expect("Something went wrong");
         }
     }

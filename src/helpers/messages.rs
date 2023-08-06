@@ -214,14 +214,12 @@ async fn insert_message(
 
 pub async fn parse_message(msg: &Message, ctx: &Context) {
     let user_id = msg.author.id.as_u64();
-    let pool;
-    {
+    let pool = {
         let data = ctx.data.read().await;
-        pool = data
+        data
             .get::<DbPool>()
-            .expect("Expected DbPool in TypeMap").clone();
-        
-    }
+            .expect("Expected DbPool in TypeMap").clone()
+    };
     insert_user(user_id, &pool).await;
 
     let channel_id = msg.channel_id.as_u64();

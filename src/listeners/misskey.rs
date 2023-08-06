@@ -55,11 +55,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                 Some(note_id) => {
                     let mut json = HashMap::new();
                     json.insert("noteId", note_id.as_str());
-                    let client;
-                    {
+                    let client = {
                         let data = ctx.data.read().await;
-                        client = data.get::<WebClient>().expect("Expected WebClient from TypeMap").clone();
-                    }
+                        data.get::<WebClient>().expect("Expected WebClient from TypeMap").clone()
+                    };
 
                     match client
                     .post("https://misskey.io/api/notes/show")
@@ -164,21 +163,21 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                         println!("[misskey][handler]: Removed embed");
                                     }
                                     Err(_) => {
-                                        println!("[misskey][handler]: Failed to remove, no perms");
+                                        eprintln!("[misskey][handler]: Failed to remove, no perms");
                                     }
                                 }
                             }
                         }
                         Err(err) => {
-                            println!("[misskey][handler]: Error trying to read response: {}", err)
+                            eprintln!("[misskey][handler]: Error trying to read response: {}", err)
                         }
                     },
-                    Err(err) => println!("[misskey][handler]: Error trying to access api with id {} and with: {}", note_id.as_str(), err),
+                    Err(err) => eprintln!("[misskey][handler]: Error trying to access api with id {} and with: {}", note_id.as_str(), err),
                 }
                 }
                 None => {
                     // Didn't find the group somehow?, might not be a note or something
-                    println!("Didn't find a match with the regex, weird? {:?}", x);
+                    eprintln!("Didn't find a match with the regex, weird? {:?}", x);
                 }
             }
         }

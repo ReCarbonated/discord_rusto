@@ -126,13 +126,12 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
 async fn send_payload(ctx: &Context, payload: APIPayload) -> Result<GalleryMetaDataList> {
     // println!("{}", serde_json::to_string(&payload).unwrap());
-    let client;
-    {
+    let client = {
         let data = ctx.data.read().await;
-        client = data.get::<WebClient>()
+        data.get::<WebClient>()
         .expect("Expected WebClient in TypeMap")
-        .clone();
-    }
+        .clone()
+    };
     let output = client
         .post("https://api.e-hentai.org/api.php")
         .json(&payload)

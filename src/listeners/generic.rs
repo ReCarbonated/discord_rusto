@@ -41,7 +41,7 @@ pub async fn message_fixer(
                                 println!("[generic][handler]: Removed embed");
                             }
                             Err(_) => {
-                                println!("[generic][handler]: Failed to remove, no perms");
+                                eprintln!("[generic][handler]: Failed to remove, no perms");
                             }
                         }
                     }
