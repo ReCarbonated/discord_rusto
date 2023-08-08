@@ -20,17 +20,16 @@ async fn toggle(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             .expect("Expected string here")
             .to_lowercase();
         // Get the listener for the guild
-        let mut is_ok = false;
         let mut is_change = false;
-        {
+        let is_ok = {
             let data = ctx.data.read().await;
-            is_ok = data
+            data
                 .get::<SettingsMap>()
                 .expect("Expected MessageListener in TypeHash")
                 .get(msg.guild_id.unwrap().as_u64())
                 .unwrap()
-                .can_edit(msg.author.id.as_u64());
-        }
+                .can_edit(msg.author.id.as_u64())
+        };
 
         if is_ok {
             // Insert list of viable options for Listeners

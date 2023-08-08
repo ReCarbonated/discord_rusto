@@ -1,6 +1,6 @@
 use chrono_tz::US::Pacific;
 use dotenvy::dotenv;
-use serenity::model::prelude::{Guild, Channel};
+use serenity::model::prelude::{Guild, Channel, Reaction};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -132,6 +132,44 @@ impl EventHandler for Handler {
     async fn guild_create(&self, ctx: Context, guild: Guild, is_new: bool) {
         println!("Got into guild create");
         types::settings::upsert_guild_setting(ctx, guild, is_new).await;
+
+    }
+
+    async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
+        let message = reaction.message(&ctx.http).await.unwrap();
+        let mut cloned = message.clone();
+        match message.referenced_message {
+            Some(ref_message) => {
+                let is_ok = {
+                    let data = ctx.data.read().await;
+                    data
+                        .get::<SettingsMap>()
+                        .expect("Expected MessageListener in TypeHash")
+                        .get(reaction.guild_id.unwrap().as_u64())
+                        .unwrap()
+                        .can_edit(reaction.user_id.unwrap().as_u64())
+                };
+                match cloned.is_own(&ctx.cache) && (ref_message.author == reaction.user(&ctx.http).await.unwrap() || is_ok) {
+                    true => {
+                        match reaction.emoji {
+                            serenity::model::prelude::ReactionType::Unicode(unicode) => {
+                                if unicode == "❌" {
+                                    let _ = cloned.suppress_embeds(&ctx.http).await;
+                                }
+                            },
+                            _ => {
+                                // Was any other reaction or not permed
+                            }
+                        }
+                    },
+                    false => {
+                        // Wasn't own or correct user
+                    }
+
+                }
+            },
+            None => {}
+        }
 
     }
 }
