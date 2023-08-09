@@ -79,7 +79,7 @@ impl Pixiv {
 
         match illust.illust_type {
             // map each page to a future that downloads the image
-            0 => {
+            0|1 => {
                 for page_number in 0..page_count {
                     println!("[pixiv][download_image_data] Downloading image, {}", page_number);
                     output.push(self.fetch_bytes(format!("{base_url}/{illust_id}_p{page_number}.{ext}").as_str()).await.unwrap());

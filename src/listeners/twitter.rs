@@ -11,5 +11,5 @@ lazy_static! {
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://vxtwitter.com", 6, (1, 7), true).await;
+    message_fixer(ctx, msg, &*RE, "https://vxtwitter.com", 6, (1, 7), true, true).await;
 }

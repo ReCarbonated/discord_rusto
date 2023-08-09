@@ -11,6 +11,7 @@ pub async fn message_fixer(
     group: usize,
     spoilers: (usize, usize),
     delete_embed: bool,
+    ignore_check: bool,
 ) {
     match re.captures(&msg.content) {
         Some(x) => {
@@ -29,19 +30,46 @@ pub async fn message_fixer(
                         post_fix.as_str(),
                         spoiler_wrap
                     );
-                    msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
+                    match ignore_check {
+                        true => {
+                            msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
 
-                    // let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
+                            // let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
 
-                    if delete_embed {
-                        sleep(Duration::from_secs(5)).await;
-                        let mut message = msg.clone();
-                        match message.suppress_embeds(&ctx.http).await {
-                            Ok(_) => {
-                                println!("[generic][handler]: Removed embed");
+                            if delete_embed {
+                                sleep(Duration::from_secs(2)).await;
+                                let mut message = msg.clone();
+                                match message.suppress_embeds(&ctx.http).await {
+                                    Ok(_) => {
+                                        println!("[generic][handler]: Removed embed");
+                                    }
+                                    Err(_) => {
+                                        eprintln!("[generic][handler]: Failed to remove, no perms");
+                                    }
+                                }
                             }
-                            Err(_) => {
-                                eprintln!("[generic][handler]: Failed to remove, no perms");
+                        }
+                        false => {
+                            match check_if_embeded(ctx, msg.clone(), 3).await {
+                                true => {}
+                                false => {
+                                    msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
+
+                                    // let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
+
+                                    if delete_embed {
+                                        sleep(Duration::from_secs(2)).await;
+                                        let mut message = msg.clone();
+                                        match message.suppress_embeds(&ctx.http).await {
+                                            Ok(_) => {
+                                                println!("[generic][handler]: Removed embed");
+                                            }
+                                            Err(_) => {
+                                                eprintln!("[generic][handler]: Failed to remove, no perms");
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -51,4 +79,23 @@ pub async fn message_fixer(
         }
         None => {}
     }
+}
+
+pub async fn check_if_embeded(ctx: &Context, msg: Message, seconds: u32) -> bool {
+    let message_id = msg.id.0;
+    let channel_id = msg.channel_id.0;
+    for _ in 0..seconds {
+        if !ctx
+            .http
+            .get_message(channel_id, message_id)
+            .await
+            .unwrap()
+            .embeds
+            .is_empty()
+        {
+            return true;
+        }
+        sleep(Duration::from_secs(1)).await;
+    }
+    return false;
 }
