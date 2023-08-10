@@ -28,7 +28,7 @@ async fn toggle(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 .expect("Expected MessageListener in TypeHash")
                 .get(msg.guild_id.unwrap().as_u64())
                 .unwrap()
-                .can_edit(msg.author.id.as_u64())
+                .can_edit(&ctx, &msg.author, &msg.guild(&ctx.cache).unwrap().into()).await
         };
 
         if is_ok {
@@ -196,15 +196,15 @@ async fn toggle_admin(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         }
     }
 
-    let is_admin;
-    {
+    let is_admin = {
         let data = ctx.data.read().await;
-        is_admin = data
+        data
             .get::<SettingsMap>()
             .expect("Expected MessageListener in TypeHash")
             .get(msg.guild_id.unwrap().as_u64())
-            .unwrap().can_edit(&msg.author.id.as_u64());
-    }
+            .unwrap()
+            .can_edit(&ctx, &msg.author, &msg.guild(&ctx.cache).unwrap().into()).await
+    };
 
     if is_admin {
         {

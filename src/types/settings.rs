@@ -1,7 +1,8 @@
 use crate::{DbPool, SettingsMap};
 use serde::{Deserialize, Serialize};
-use serenity::client::Context;
 use serenity::model::guild::Guild;
+use serenity::model::prelude::{Message, PartialGuild};
+use serenity::{client::Context, model::user::User};
 use sqlx::types::Json;
 use std::{collections::HashMap, env};
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -78,8 +79,16 @@ impl Setting {
         self.admins.contains(user_id)
     }
 
-    pub fn can_edit(&self, user_id: &u64) -> bool {
-        self.is_an_admin(user_id) || self.is_owner(user_id)
+    pub async fn can_edit(&self, ctx: &Context, user: &User, guild: &PartialGuild) -> bool {
+        self.is_an_admin(user.id.as_u64())
+            || self.is_owner(user.id.as_u64())
+            || guild
+                .member(&ctx.http, user.id)
+                .await
+                .unwrap()
+                .permissions
+                .unwrap()
+                .administrator()
     }
 }
 
@@ -152,7 +161,7 @@ pub async fn upsert_guild_setting(ctx: Context, guild: Guild, is_new: bool) {
                 let data = ctx.data.read().await;
                 pool = data.get::<DbPool>().unwrap().clone();
             }
-            
+
             insert_guild_setting(guild.id.0, &new_setting, &pool).await;
         }
     }

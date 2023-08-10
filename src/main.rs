@@ -147,7 +147,7 @@ impl EventHandler for Handler {
                         .expect("Expected MessageListener in TypeHash")
                         .get(reaction.guild_id.unwrap().as_u64())
                         .unwrap()
-                        .can_edit(reaction.user_id.unwrap().as_u64())
+                        .can_edit(&ctx, &reaction.user(&ctx.http).await.unwrap(), &ctx.http.get_guild(reaction.guild_id.unwrap().0).await.unwrap()).await
                 };
                 match cloned.is_own(&ctx.cache) && (ref_message.author == reaction.user(&ctx.http).await.unwrap() || is_ok) {
                     true => {
