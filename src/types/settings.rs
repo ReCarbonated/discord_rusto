@@ -83,10 +83,8 @@ impl Setting {
         self.is_an_admin(user.id.as_u64())
             || self.is_owner(user.id.as_u64())
             || guild
-                .member(&ctx.http, user.id)
+                .member_permissions(&ctx.http, user)
                 .await
-                .unwrap()
-                .permissions
                 .unwrap()
                 .administrator()
     }
