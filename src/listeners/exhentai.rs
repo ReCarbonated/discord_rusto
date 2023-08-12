@@ -63,7 +63,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                             .send_message(&ctx.http, |m| {
                                 m.add_embed(|e| {
                                     e.image(gallery_data.thumbnail.clone())
-                                        .title(gallery_data.title.clone())
+                                        .title(html_escape::decode_html_entities(gallery_data.title.as_str()))
                                         .field("Category", gallery_data.category.clone(), true)
                                         .url(x.get(0).unwrap().as_str().to_string());
                                     if !language_tags.is_empty() {

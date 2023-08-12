@@ -12,9 +12,11 @@ pub async fn message_fixer(
     spoilers: (usize, usize),
     delete_embed: bool,
     ignore_check: bool,
+    caller: &str
 ) {
     match re.captures(&msg.content) {
         Some(x) => {
+            println!("[{}][message_fixer] There was a match with url: {}", caller, x.get(0).unwrap().as_str());
             match x.get(group) {
                 Some(post_fix) => {
                     // Rebuild message here, only getting the first value because I don't care anymore
@@ -41,10 +43,10 @@ pub async fn message_fixer(
                                 let mut message = msg.clone();
                                 match message.suppress_embeds(&ctx.http).await {
                                     Ok(_) => {
-                                        println!("[generic][handler]: Removed embed");
+                                        println!("[{}][handler]: Removed embed", caller);
                                     }
                                     Err(_) => {
-                                        eprintln!("[generic][handler]: Failed to remove, no perms");
+                                        eprintln!("[{}][handler]: Failed to remove, no perms", caller);
                                     }
                                 }
                             }
@@ -62,10 +64,10 @@ pub async fn message_fixer(
                                         let mut message = msg.clone();
                                         match message.suppress_embeds(&ctx.http).await {
                                             Ok(_) => {
-                                                println!("[generic][handler]: Removed embed");
+                                                println!("[{}][handler]: Removed embed", caller);
                                             }
                                             Err(_) => {
-                                                eprintln!("[generic][handler]: Failed to remove, no perms");
+                                                eprintln!("[{}][handler]: Failed to remove, no perms", caller);
                                             }
                                         }
                                     }
@@ -74,7 +76,9 @@ pub async fn message_fixer(
                         }
                     }
                 }
-                None => {}
+                None => {
+                    eprintln!("[{}][message_fixer] Failed to get group at loc: {}", caller, group);
+                }
             }
         }
         None => {}

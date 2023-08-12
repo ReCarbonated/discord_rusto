@@ -112,6 +112,7 @@ async fn toggle_admin(value: &User, guild_id: &GuildId, user: &User, ctx: &Conte
                 .expect("Expected MessageListener in TypeHash");
             let setting = mapping.entry(*guild_id.as_u64());
             let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
+            entry.insert_log(format!("[{}][{}] {}", user.name, "add admin", user.name));
             entry.admins.push(*value.id.as_u64());
         }
         let (setting, pool) = {
@@ -142,7 +143,12 @@ async fn toggle_logs(guild_id: &GuildId, ctx: &Context) -> String {
             .log.clone()
     };
 
-    itertools::join(logs, "\n")
+    let output = itertools::join(logs, "\n");
+    if output.is_empty() {
+        "No Logs at all".to_string()
+    } else {
+        output
+    }
 }
 
 async fn toggle_status(guild_id: &GuildId, ctx: &Context) -> String {
@@ -191,10 +197,7 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.vt_tiktok = !entry.listeners.vt_tiktok;
-                    if entry.log.len() > 5 {
-                        entry.log.pop_front();
-                    }
-                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.vt_tiktok));
+                    entry.insert_log(format!("[{}][{}] {}", user.name, value, entry.listeners.vt_tiktok));
                 }
                 is_change = true;
             }
@@ -207,10 +210,7 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.tiktok = !entry.listeners.tiktok;
-                    if entry.log.len() > 5 {
-                        entry.log.pop_front();
-                    }
-                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.tiktok));
+                    entry.insert_log(format!("[{}][{}] {}", user.name, value, entry.listeners.tiktok));
                 }
                 is_change = true;
             }
@@ -223,10 +223,7 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.misskey = !entry.listeners.misskey;
-                    if entry.log.len() > 5 {
-                        entry.log.pop_front();
-                    }
-                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.misskey));
+                    entry.insert_log(format!("[{}][{}] {}", user.name, value, entry.listeners.misskey));
                 }
                 is_change = true;
             }
@@ -239,10 +236,7 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.pixiv = !entry.listeners.pixiv;
-                    if entry.log.len() > 5 {
-                        entry.log.pop_front();
-                    }
-                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.pixiv));
+                    entry.insert_log(format!("[{}][{}] {}", user.name, value, entry.listeners.pixiv));
                 }
                 is_change = true;
             }
@@ -255,10 +249,7 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.insta = !entry.listeners.insta;
-                    if entry.log.len() > 5 {
-                        entry.log.pop_front();
-                    }
-                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.insta));
+                    entry.insert_log(format!("[{}][{}] {}", user.name, value, entry.listeners.insta));
                 }
                 is_change = true;
             }
@@ -271,10 +262,7 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.exhentai = !entry.listeners.vt_tiktok;
-                    if entry.log.len() > 5 {
-                        entry.log.pop_front();
-                    }
-                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.vt_tiktok));
+                    entry.insert_log(format!("[{}][{}] {}", user.name, value, entry.listeners.vt_tiktok));
                 }
                 is_change = true;
             }
@@ -287,10 +275,7 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.twitter = !entry.listeners.twitter;
-                    if entry.log.len() > 5 {
-                        entry.log.pop_front();
-                    }
-                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.twitter));
+                    entry.insert_log(format!("[{}][{}] {}", user.name, value, entry.listeners.twitter));
                 }
                 is_change = true;
             }

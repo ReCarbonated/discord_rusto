@@ -92,6 +92,13 @@ impl Setting {
                 .unwrap()
                 .administrator()
     }
+
+    pub fn insert_log(&mut self, line: String) {
+        if self.log.len() > 9 {
+            self.log.pop_front();
+        }
+        self.log.push_back(line);
+    }
 }
 
 #[derive(sqlx::FromRow)]

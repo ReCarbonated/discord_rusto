@@ -12,6 +12,6 @@ lazy_static! {
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://vt.tiktxk.com", 5, (1, 7), true, true).await;
+    message_fixer(ctx, msg, &*RE, "https://vt.tiktxk.com", 5, (1, 7), true, true, "vt_tiktok").await;
 }
 

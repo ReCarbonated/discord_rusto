@@ -6,10 +6,10 @@ use serenity::model::channel::Message;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(tiktok.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
+        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(tiktok.com)\b([-a-zA-Z0-9()@:%_\+.~#&?//=]{1,})(\?.*)?(\|\|)?"
     ).unwrap();
 }
 
 pub async fn handler(ctx: &Context, msg: &Message) {
-    message_fixer(ctx, msg, &*RE, "https://tiktxk.com", 6, (1, 8), true, false).await;
+    message_fixer(ctx, msg, &*RE, "https://tiktxk.com", 6, (1, 8), true, true, "tiktok").await;
 }
