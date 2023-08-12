@@ -1,11 +1,12 @@
 use chrono_tz::US::Pacific;
 use dotenvy::dotenv;
-use serenity::model::prelude::{Guild, Channel, Reaction};
+use serenity::model::prelude::{Guild, Channel, Reaction, Interaction, InteractionResponseType};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
 pub mod commands;
 pub mod helpers;
+pub mod slash;
 mod listeners;
 pub mod types;
 use listeners::{check_parsers, Handler};
@@ -103,29 +104,63 @@ impl EventHandler for Handler {
             } else {
                 println!(
                     "[{}][{}]-[{}]-[{}]: {}",
-                    time, guild_name, channel_name, username, &msg.content
+                    time, guild_name, channel_name, username, &msg.content.replace("\n", " ")
                 );
             }
         }
 
-        let listeners = {
-            let listners = ctx.data.read().await;
-            listners
-                .get::<SettingsMap>()
-                .expect("Expected SettingsMap in TypeHash").clone()
-        };
-        check_parsers(&ctx, &msg, &listeners).await;
+        if !msg.author.bot {
+            let listeners = {
+                let listners = ctx.data.read().await;
+                listners
+                    .get::<SettingsMap>()
+                    .expect("Expected SettingsMap in TypeHash").clone()
+            };
+            check_parsers(&ctx, &msg, &listeners).await;
+            parse_message(&msg, &ctx).await;
+        }
+    }
 
-        parse_message(&msg, &ctx).await;
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        if let Interaction::ApplicationCommand(command) = interaction {
+
+            let content = match command.data.name.as_str() {
+                "listeners" => slash::toggle::run(&command.data.options, &command.guild_id.unwrap(), &command.user, &ctx).await,
+                _ => "not implemented :(".to_string(),
+            };
+
+            if let Err(why) = command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::ChannelMessageWithSource)
+                        .interaction_response_data(|message| message.content(content).ephemeral(true))
+                })
+                .await
+            {
+                println!("Cannot respond to slash command: {}", why);
+            }
+        }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        match ctx.http.get_channel(192772727281680385).await.unwrap() {
+        match &ctx.http.get_channel(192772727281680385).await.unwrap() {
             Channel::Private(channel) => {
-                let _ = channel.say(ctx.http, "Loaded").await;
+                let _ = channel.say(&ctx.http, "Loaded").await;
             }
             _ => {}
         }
+
+        // let _ = serenity::model::application::command::Command::set_global_application_commands(&ctx.http, |command| {
+        //     command
+        // })
+        // .await;
+
+        let _guild_command = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| {
+            slash::toggle::register(command)
+        })
+        .await;
+
+        // println!("I created the following global slash command: {:#?}", guild_command);
         println!("{} is connected!", ready.user.name);
     }
 
@@ -147,7 +182,7 @@ impl EventHandler for Handler {
                         .expect("Expected MessageListener in TypeHash")
                         .get(reaction.guild_id.unwrap().as_u64())
                         .unwrap()
-                        .can_edit(&ctx, &reaction.user(&ctx.http).await.unwrap(), &ctx.http.get_guild(reaction.guild_id.unwrap().0).await.unwrap()).await
+                        .can_edit(&ctx, &reaction.user(&ctx.http).await.unwrap(), &reaction.guild_id.unwrap()).await
                 };
                 match cloned.is_own(&ctx.cache) && (ref_message.author == reaction.user(&ctx.http).await.unwrap() || is_ok) {
                     true => {

@@ -9,6 +9,7 @@ use serenity::{
 };
 
 #[group]
+#[description= "A group of of commands that will extract emojis from something"]
 #[commands(emoji)]
 struct Emojis;
 
@@ -40,7 +41,7 @@ async fn emoji(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
 #[command]
 #[aliases("g")]
-#[description("Get things from a guild")]
+#[description("Get emojis from a guild")]
 async fn emoji_guild(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let mut generated_embed = CreateEmbed::default();
     generated_embed.title("Emojis");
@@ -99,26 +100,5 @@ async fn emoji_message(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
             msg.reply(&ctx.http, "Failed to grab message with supplied id and/or channel_id, might need to specify them.").await.expect("Something went wrong");
         }
     }
-
-    // let mut generated_embed = CreateEmbed::default();
-
-    // generated_embed.title("Emojis");
-    // if let Some(guild) = msg.guild(&ctx.cache) {
-    //     for emoji in guild.emojis(&ctx.http).await? {
-    //         generated_embed.field(emoji.name.clone(), format!("{}", emoji), true);
-    //     }
-    // }
-
-    // let msg = msg
-    //     .channel_id
-    //     .send_message(&ctx.http, |m| {
-    //         m.content("").add_embeds(vec![generated_embed])
-    //     })
-    //     .await;
-
-    // if let Err(why) = msg {
-    //     println!("Error sending message: {:?}", why);
-    // }
-
     Ok(())
 }

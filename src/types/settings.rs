@@ -1,7 +1,7 @@
 use crate::{DbPool, SettingsMap};
 use serde::{Deserialize, Serialize};
 use serenity::model::guild::Guild;
-use serenity::model::prelude::{Message, PartialGuild};
+use serenity::model::prelude::GuildId;
 use serenity::{client::Context, model::user::User};
 use sqlx::types::Json;
 use std::{collections::HashMap, env};
@@ -79,10 +79,10 @@ impl Setting {
         self.admins.contains(user_id)
     }
 
-    pub async fn can_edit(&self, ctx: &Context, user: &User, guild: &PartialGuild) -> bool {
+    pub async fn can_edit(&self, ctx: &Context, user: &User, guild: &GuildId) -> bool {
         self.is_an_admin(user.id.as_u64())
             || self.is_owner(user.id.as_u64())
-            || guild
+            || guild.to_guild_cached(&ctx.cache).unwrap()
                 .member_permissions(&ctx.http, user)
                 .await
                 .unwrap()
