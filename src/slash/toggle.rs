@@ -30,6 +30,19 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         })
         .create_option(|opt| {
             opt
+                .name("admin")
+                .description("Add an admin to control")  
+                .kind(CommandOptionType::SubCommand)
+                .create_sub_option(|sub_option| {
+                    sub_option
+                        .name("user")
+                        .description("User to be an admin")
+                        .kind(CommandOptionType::User)
+                        .required(true)
+                })
+        })
+        .create_option(|opt| {
+            opt
                 .name("toggle")
                 .description("Toggle the specified listener")
                 .kind(CommandOptionType::SubCommand)
@@ -64,11 +77,57 @@ pub async fn run(options: &[CommandDataOption], guild_id: &GuildId, user: &User,
             },
             "logs" => {
                 toggle_logs(guild_id, ctx).await
+            },
+            "admin" => {
+                let command_value = command_data_option.options.get(0).unwrap().resolved.as_ref().unwrap();
+                if let CommandDataOptionValue::User(user_input, _member) = command_value {
+                    toggle_admin(user_input, guild_id, user, ctx).await
+                } else {
+                    "Failed to parse input".to_string()
+                }
             }
             _ => {"Heh".to_string()},
         }
     } else {
         "Expected something".to_string()
+    }
+}
+
+async fn toggle_admin(value: &User, guild_id: &GuildId, user: &User, ctx: &Context) -> String {
+    let is_admin = {
+        let data = ctx.data.read().await;
+        data
+            .get::<SettingsMap>()
+            .expect("Expected MessageListener in TypeHash")
+            .get(guild_id.as_u64())
+            .unwrap()
+            .can_edit(&ctx, &user, guild_id).await
+    };
+
+    if is_admin {
+        {
+            let mut data = ctx.data.write().await;
+            let mapping = data
+                .get_mut::<SettingsMap>()
+                .expect("Expected MessageListener in TypeHash");
+            let setting = mapping.entry(*guild_id.as_u64());
+            let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
+            entry.admins.push(*value.id.as_u64());
+        }
+        let (setting, pool) = {
+            let data = ctx.data.read().await;
+            (data
+                .get::<SettingsMap>()
+                .expect("Expected MessageListener in TypeHash")
+                .get(guild_id.as_u64())
+                .unwrap().clone(), data.get::<DbPool>().unwrap().clone())
+        };
+        println!("{:?}", setting);
+        crate::types::settings::insert_guild_setting(*guild_id.as_u64(), &setting, &pool).await;
+        "Added user".to_string()
+    } else {
+        // No perms
+        "No Perms".to_string()
     }
 }
 
