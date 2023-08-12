@@ -5,6 +5,7 @@ use serenity::model::prelude::GuildId;
 use serenity::{client::Context, model::user::User};
 use sqlx::types::Json;
 use std::{collections::HashMap, env};
+use std::collections::VecDeque;
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Listeners {
     #[serde(default)]
@@ -60,6 +61,8 @@ pub struct Setting {
     pub admins: Vec<u64>,
     #[serde(default)]
     pub owner: u64,
+    #[serde(default)]
+    pub log: VecDeque<String>
 }
 
 impl Setting {
@@ -68,6 +71,7 @@ impl Setting {
             listeners: Listeners::new(),
             admins: Vec::new(),
             owner,
+            log: VecDeque::new()
         }
     }
 

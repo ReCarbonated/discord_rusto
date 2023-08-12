@@ -12,25 +12,6 @@ use serenity::{
 
 use crate::{SettingsMap, types::Setting, DbPool};
 
-// pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-//     command
-//         .name("toggle")
-//         .description("Toggles the bot to fix links or not, Admin required")
-//         .create_option(|opt| {
-//             opt.name("website")
-//                 .description("Website to be toggled")
-//                 .required(true)
-//                 .kind(CommandOptionType::String)
-//                 .add_string_choice("twitter", "twitter")
-//                 .add_string_choice("misskey", "misskey")
-//                 .add_string_choice("instagram", "insta")
-//                 .add_string_choice("pixiv", "pixiv")
-//                 .add_string_choice("tiktok", "tiktok")
-//                 .add_string_choice("vt_tiktok", "vt_tiktok")
-//         }
-//     )
-// }
-
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("listeners")
@@ -40,6 +21,12 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .name("status")
                 .description("Prints the status of the listeners")
                 .kind(CommandOptionType::SubCommand)
+        })
+        .create_option(|opt| {
+            opt
+                .name("logs")
+                .description("Prints the last 5 commands that were sent by the bot")
+                .kind(CommandOptionType::SubCommand)  
         })
         .create_option(|opt| {
             opt
@@ -75,11 +62,28 @@ pub async fn run(options: &[CommandDataOption], guild_id: &GuildId, user: &User,
                     "Something blew up".to_string()
                 }
             },
+            "logs" => {
+                toggle_logs(guild_id, ctx).await
+            }
             _ => {"Heh".to_string()},
         }
     } else {
         "Expected something".to_string()
     }
+}
+
+async fn toggle_logs(guild_id: &GuildId, ctx: &Context) -> String {
+    let logs = {
+        let data = ctx.data.read().await;
+        data
+            .get::<SettingsMap>()
+            .expect("Expected MessageListener in TypeHash")
+            .get(guild_id.as_u64())
+            .unwrap()
+            .log.clone()
+    };
+
+    itertools::join(logs, "\n")
 }
 
 async fn toggle_status(guild_id: &GuildId, ctx: &Context) -> String {
@@ -128,6 +132,10 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.vt_tiktok = !entry.listeners.vt_tiktok;
+                    if entry.log.len() > 5 {
+                        entry.log.pop_front();
+                    }
+                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.vt_tiktok));
                 }
                 is_change = true;
             }
@@ -140,6 +148,10 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.tiktok = !entry.listeners.tiktok;
+                    if entry.log.len() > 5 {
+                        entry.log.pop_front();
+                    }
+                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.tiktok));
                 }
                 is_change = true;
             }
@@ -152,6 +164,10 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.misskey = !entry.listeners.misskey;
+                    if entry.log.len() > 5 {
+                        entry.log.pop_front();
+                    }
+                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.misskey));
                 }
                 is_change = true;
             }
@@ -164,6 +180,10 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.pixiv = !entry.listeners.pixiv;
+                    if entry.log.len() > 5 {
+                        entry.log.pop_front();
+                    }
+                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.pixiv));
                 }
                 is_change = true;
             }
@@ -176,6 +196,10 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.insta = !entry.listeners.insta;
+                    if entry.log.len() > 5 {
+                        entry.log.pop_front();
+                    }
+                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.insta));
                 }
                 is_change = true;
             }
@@ -188,6 +212,10 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.exhentai = !entry.listeners.vt_tiktok;
+                    if entry.log.len() > 5 {
+                        entry.log.pop_front();
+                    }
+                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.vt_tiktok));
                 }
                 is_change = true;
             }
@@ -200,6 +228,10 @@ async fn toggle_state(value: &str, guild_id: &GuildId, user: &User, ctx: &Contex
                     let setting = mapping.entry(*guild_id.as_u64());
                     let entry = setting.or_insert(Setting::new(*guild_id.as_u64()));
                     entry.listeners.twitter = !entry.listeners.twitter;
+                    if entry.log.len() > 5 {
+                        entry.log.pop_front();
+                    }
+                    entry.log.push_back(format!("[{}][{}] {}", user.name, value, entry.listeners.twitter));
                 }
                 is_change = true;
             }

@@ -216,17 +216,16 @@ async fn toggle_admin(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             let entry = setting.or_insert(Setting::new(*msg.guild_id.unwrap().as_u64()));
             entry.admins.extend(user_ids);
         }
-        {
+        let (setting, pool) = {
             let data = ctx.data.read().await;
-            let setting = data
+            (data
                 .get::<SettingsMap>()
                 .expect("Expected MessageListener in TypeHash")
                 .get(msg.guild_id.unwrap().as_u64())
-                .unwrap();
-            let pool = data.get::<DbPool>().unwrap();
-            println!("{:?}", setting);
-            crate::types::settings::insert_guild_setting(*msg.guild_id.unwrap().as_u64(), setting, pool).await;
-        }
+                .unwrap().clone(), data.get::<DbPool>().unwrap().clone())
+        };
+        println!("{:?}", setting);
+        crate::types::settings::insert_guild_setting(*msg.guild_id.unwrap().as_u64(), &setting, &pool).await;
     } else {
         // No perms
         println!("No Perms");
