@@ -87,7 +87,7 @@ impl Setting {
         self.is_an_admin(user.id.as_u64())
             || self.is_owner(user.id.as_u64())
             || guild.to_guild_cached(&ctx.cache).unwrap()
-                .member_permissions(&ctx.http, user)
+                .member_permissions(ctx, user)
                 .await
                 .unwrap()
                 .administrator()

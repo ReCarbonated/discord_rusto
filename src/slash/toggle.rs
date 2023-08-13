@@ -43,6 +43,12 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         })
         .create_option(|opt| {
             opt
+                .name("admins")
+                .description("Prints the usernames of admins in this server")
+                .kind(CommandOptionType::SubCommand)  
+        })
+        .create_option(|opt| {
+            opt
                 .name("toggle")
                 .description("Toggle the specified listener")
                 .kind(CommandOptionType::SubCommand)
@@ -85,12 +91,40 @@ pub async fn run(options: &[CommandDataOption], guild_id: &GuildId, user: &User,
                 } else {
                     "Failed to parse input".to_string()
                 }
+            },
+            "admins" => {
+                toggle_admins(guild_id, ctx).await
             }
             _ => {"Heh".to_string()},
         }
     } else {
         "Expected something".to_string()
     }
+}
+
+async fn toggle_admins(guild_id: &GuildId, ctx: &Context) -> String{
+    let setting = {
+        let data = ctx.data.read().await;
+        data
+        .get::<SettingsMap>()
+        .expect("Expected MessageListener in TypeHash")
+        .get(guild_id.as_u64())
+        .unwrap().clone()
+    };
+
+    let (owner, admins) = (setting.owner, setting.admins);
+
+    let mut output = Vec::new();
+    output.push(guild_id.member(ctx, owner).await.unwrap().nick.unwrap());
+
+    for admin in admins {
+        if let Ok(member) = guild_id.member(ctx, admin).await {
+            if let Some(nick) = member.nick {
+                output.push(nick);
+            }
+        }
+    }
+    output.join("\n")
 }
 
 async fn toggle_admin(value: &User, guild_id: &GuildId, user: &User, ctx: &Context) -> String {

@@ -189,7 +189,7 @@ impl EventHandler for Handler {
                         match reaction.emoji {
                             serenity::model::prelude::ReactionType::Unicode(unicode) => {
                                 if unicode == "❌" {
-                                    let _ = cloned.suppress_embeds(&ctx.http).await;
+                                    let _ = cloned.suppress_embeds(ctx).await;
                                 }
                             },
                             _ => {
@@ -321,7 +321,7 @@ async fn guild_parse(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
     let guild_id = args.single::<u64>()?;
 
     let guild = GuildId(guild_id);
-    let guild_map = guild.channels(&ctx.http).await;
+    let guild_map = guild.channels(ctx).await;
     for (channel_id, _) in guild_map? {
         let mut messages = channel_id.messages_iter(&ctx).boxed();
         while let Some(message_result) = messages.next().await {

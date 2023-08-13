@@ -19,7 +19,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
         Some(x) => match x.get(2) {
             Some(gallery_id) => match x.get(3) {
                 Some(gallery_token) => {
-                    if msg.channel(&ctx.http).await.unwrap().is_nsfw() {
+                    if msg.channel(ctx).await.unwrap().is_nsfw() {
                         let json_payload = APIPayload::new(
                             gallery_id.as_str().parse::<u32>().unwrap(),
                             gallery_token.as_str().to_string(),

@@ -41,7 +41,7 @@ pub async fn message_fixer(
                             if delete_embed {
                                 sleep(Duration::from_secs(2)).await;
                                 let mut message = msg.clone();
-                                match message.suppress_embeds(&ctx.http).await {
+                                match message.suppress_embeds(ctx).await {
                                     Ok(_) => {
                                         println!("[{}][handler]: Removed embed", caller);
                                     }
@@ -62,7 +62,7 @@ pub async fn message_fixer(
                                     if delete_embed {
                                         sleep(Duration::from_secs(2)).await;
                                         let mut message = msg.clone();
-                                        match message.suppress_embeds(&ctx.http).await {
+                                        match message.suppress_embeds(ctx).await {
                                             Ok(_) => {
                                                 println!("[{}][handler]: Removed embed", caller);
                                             }
