@@ -103,7 +103,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                         sleep(Duration::from_secs(5)).await;
                         let mut message = msg.clone();
-                        match message.suppress_embeds(ctx).await {
+                        match message.suppress_embeds(&ctx.http).await {
                             Ok(_) => {
                                 println!("[pixiv][handler]: Removed embed");
                             }
