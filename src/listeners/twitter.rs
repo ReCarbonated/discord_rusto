@@ -6,7 +6,7 @@ use serenity::model::channel::Message;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(
-        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(twitter.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]+\/status\/[-a-zA-Z0-9()@:%_\+.~#&//=]+){1,}(\|\|)?",
+        r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(twitter\.com|x\.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]+\/status\/[-a-zA-Z0-9()@:%_\+.~#&//=]+){1,}(\|\|)?",
     ).unwrap();
 }
 
