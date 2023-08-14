@@ -172,7 +172,7 @@ impl EventHandler for Handler {
 
     async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
         let message = reaction.message(&ctx.http).await.unwrap();
-        let mut cloned = message.clone();
+        let cloned = message.clone();
         match message.referenced_message {
             Some(ref_message) => {
                 let is_ok = {
@@ -184,12 +184,12 @@ impl EventHandler for Handler {
                         .unwrap()
                         .can_edit(&ctx, &reaction.user(&ctx.http).await.unwrap(), &reaction.guild_id.unwrap()).await
                 };
-                match cloned.is_own(&ctx.cache) && (ref_message.author == reaction.user(&ctx.http).await.unwrap() || is_ok) {
+                match cloned.is_own(&ctx.cache) && (is_ok || ref_message.author == reaction.user(&ctx.http).await.unwrap_or_default()) {
                     true => {
                         match reaction.emoji {
                             serenity::model::prelude::ReactionType::Unicode(unicode) => {
                                 if unicode == "❌" {
-                                    let _ = cloned.suppress_embeds(ctx).await;
+                                    let _ = cloned.delete(ctx).await;
                                 }
                             },
                             _ => {
