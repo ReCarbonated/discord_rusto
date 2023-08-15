@@ -1,6 +1,6 @@
 use chrono_tz::US::Pacific;
 use dotenvy::dotenv;
-use serenity::model::prelude::{Guild, Channel, Reaction, Interaction, InteractionResponseType};
+use serenity::model::prelude::{Guild, Channel, Reaction, Interaction, InteractionResponseType, MessageId};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -167,8 +167,11 @@ impl EventHandler for Handler {
     async fn guild_create(&self, ctx: Context, guild: Guild, is_new: bool) {
         println!("Got into guild create");
         types::settings::upsert_guild_setting(ctx, guild, is_new).await;
-
     }
+
+    // async fn message_delete(&self, ctx: Context, channel_id: ChannelId, deleted_message: MessageId, _guild_id: Option<GuildId>) {
+    //     channel_id.message(&ctx.http, deleted_message).await.unwrap().
+    // }
 
     async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
         let message = reaction.message(&ctx.http).await.unwrap();
