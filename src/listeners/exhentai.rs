@@ -1,12 +1,16 @@
+use std::time::Duration;
+
 use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serenity::client::Context;
 use serenity::model::channel::Message;
+use tokio::time::sleep;
 use crate::{
     types::{APIPayload, GalleryMetaDataList, Metatag},
     WebClient,
 };
+use url::Url;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(
@@ -66,6 +70,21 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                         .title(html_escape::decode_html_entities(gallery_data.title.as_str()))
                                         .field("Category", gallery_data.category.clone(), true)
                                         .url(x.get(0).unwrap().as_str().to_string());
+
+                                    let object = Url::parse(&x.get(0).unwrap().as_str().replace("|", "")).unwrap();
+                                    let mut exhentai;
+                                    let mut ehentai;
+                                    if object.host().unwrap().to_string().contains("exh") {
+                                        exhentai = object.clone();
+                                        ehentai = object.clone();
+                                        let _ = ehentai.set_host(Some("e-hentai.org"));
+                                    } else {
+                                        ehentai = object.clone();
+                                        exhentai = object.clone();
+                                        let _ = exhentai.set_host(Some("exhentai.org"));
+                                    }
+                                    e.field("Gallery", format!("[exhentai]({}) - [e-hentai]({})", exhentai.as_str(), ehentai.as_str()) , true);
+                                    e.field("MPV", format!("[exhentai]({}) - [e-hentai]({})", exhentai.as_str().replace("/g/", "/mpv/"), ehentai.as_str().replace("/g/", "/mpv/")) , true);
                                     if !language_tags.is_empty() {
                                         e.field("Language", language_tags.join(", "), true);
                                     }
@@ -107,7 +126,17 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 });
                                 m
                             })
-                            .await;
+                        .await;
+                        sleep(Duration::from_secs(2)).await;
+                        let mut message = msg.clone();
+                        match message.suppress_embeds(&ctx.http).await {
+                            Ok(_) => {
+                                println!("[exhentai][handler]: Removed embed");
+                            }
+                            Err(_) => {
+                                eprintln!("[exhentai][handler]: Failed to remove, no perms");
+                            }
+                        }
                     }
                 }
                 None => {

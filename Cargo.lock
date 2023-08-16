@@ -549,6 +549,7 @@ dependencies = [
  "serenity",
  "sqlx",
  "tokio",
+ "url",
 ]
 
 [[package]]
