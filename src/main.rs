@@ -123,7 +123,7 @@ impl EventHandler for Handler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
-
+            // println!("{:?}", command);
             let content = match command.data.name.as_str() {
                 "listeners" => slash::toggle::run(&command.data.options, &command.guild_id.unwrap(), &command.user, &ctx).await,
                 "exchange" => slash::exchange::run(&command.data.options, &ctx).await,
@@ -171,10 +171,12 @@ impl EventHandler for Handler {
         })
         .await;
 
-        let _ = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| {
+        let _stuff = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| {
             slash::exchange::register(command)
         })
         .await;
+
+        // println!("{:?}", stuff);
 
         // println!("I created the following global slash command: {:#?}", guild_command);
         println!("{} is connected!", ready.user.name);

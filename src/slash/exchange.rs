@@ -30,7 +30,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .create_sub_option(|subopt| {
                     subopt
                         .name("to")
-                        .description("Currency to convert to (VND, MYR, ZWL")
+                        .description("Currency to convert to (VND, MYR, ZWL)")
                         .required(true)
                         .kind(CommandOptionType::String)
                 })
@@ -39,6 +39,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                         .name("amount")
                         .description("Amount to convert from base currency")
                         .kind(CommandOptionType::Number)
+                        .min_number_value(0.0)
                 })
         })
 }
@@ -62,17 +63,21 @@ pub async fn run(options: &[CommandDataOption], ctx: &Context) -> String {
                     .as_ref()
                     .unwrap();
                 let amount;
+                // println!("{:?}", options);
                 if let Some(possible_number) = command_data_option.options.get(2) {
                     if let Some(resolved_number) = possible_number.resolved.as_ref() {
                         if let CommandDataOptionValue::Number(parsed_amount) = resolved_number {
                             amount = parsed_amount.clone();
                         } else {
+                            println!("Couldn't get number");
                             amount = 1.0;
                         }
                     } else {
+                        println!("Couldn't resolve");
                         amount = 1.0;
                     }
                 } else {
+                    println!("Couldn't get option2");
                     amount = 1.0;
                 }
                 if let (
