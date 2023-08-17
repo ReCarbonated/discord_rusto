@@ -1,6 +1,6 @@
 use chrono_tz::US::Pacific;
 use dotenvy::dotenv;
-use serenity::model::prelude::{Guild, Channel, Reaction, Interaction, InteractionResponseType, MessageId};
+use serenity::model::prelude::{Guild, Channel, Reaction, Interaction, InteractionResponseType};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
