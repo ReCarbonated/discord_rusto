@@ -115,7 +115,7 @@ async fn toggle_admins(guild_id: &GuildId, ctx: &Context) -> String{
     let (owner, admins) = (setting.owner, setting.admins);
 
     let mut output = Vec::new();
-    output.push(guild_id.member(ctx, owner).await.unwrap().nick.unwrap());
+    output.push(guild_id.member(ctx, owner).await.unwrap().to_string());
 
     for admin in admins {
         if let Ok(member) = guild_id.member(ctx, admin).await {

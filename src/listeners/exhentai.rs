@@ -68,8 +68,12 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 m.add_embed(|e| {
                                     e.image(gallery_data.thumbnail.clone())
                                         .title(html_escape::decode_html_entities(gallery_data.title.as_str()))
-                                        .field("Category", gallery_data.category.clone(), true)
+                                        .field("Category", gallery_data.category.as_str(), true)
                                         .url(x.get(0).unwrap().as_str().to_string());
+
+                                    e.author(|a| {
+                                        a.name(gallery_data.uploader.as_str())
+                                    });
 
                                     let object = Url::parse(&x.get(0).unwrap().as_str().replace("|", "")).unwrap();
                                     let mut exhentai;

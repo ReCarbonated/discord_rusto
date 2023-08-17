@@ -19,6 +19,8 @@ serde_json = "1.0.103"
 itertools = "0.11.0"
 html-escape = "0.2.13"
 url = "2.4.0"
+strum = "0.25.0"
+strum_macros = "0.25.0"
 
 [dependencies.serenity]
 features = ["cache", "framework", "standard_framework", "rustls_backend", "utils", "model", "cache"]

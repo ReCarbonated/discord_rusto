@@ -126,6 +126,7 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "listeners" => slash::toggle::run(&command.data.options, &command.guild_id.unwrap(), &command.user, &ctx).await,
+                "exchange" => slash::exchange::run(&command.data.options, &ctx).await,
                 _ => "not implemented :(".to_string(),
             };
 
@@ -133,7 +134,17 @@ impl EventHandler for Handler {
                 .create_interaction_response(&ctx.http, |response| {
                     response
                         .kind(InteractionResponseType::ChannelMessageWithSource)
-                        .interaction_response_data(|message| message.content(content).ephemeral(true))
+                        .interaction_response_data(|message| {
+                            message
+                            .content(content);
+                            match command.data.name.as_str() {
+                                "listeners" => {message.ephemeral(true);},
+                                _ => {} 
+                            }
+                            message
+                        } 
+                            
+                        )
                 })
                 .await
             {
@@ -155,8 +166,13 @@ impl EventHandler for Handler {
         // })
         // .await;
 
-        let _guild_command = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| {
+        let _ = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| {
             slash::toggle::register(command)
+        })
+        .await;
+
+        let _ = serenity::model::application::command::Command::create_global_application_command(&ctx.http, |command| {
+            slash::exchange::register(command)
         })
         .await;
 
