@@ -16,7 +16,7 @@ pub async fn message_fixer(
 ) {
     match re.captures(&msg.content) {
         Some(x) => {
-            println!("[{}][message_fixer] There was a match with url: {}", caller, x.get(0).unwrap().as_str());
+            println!("[{}][message_fixer][{}] There was a match with url: {}", caller, msg.id.to_string(), x.get(0).unwrap().as_str());
             match x.get(group) {
                 Some(post_fix) => {
                     // Rebuild message here, only getting the first value because I don't care anymore
@@ -43,10 +43,10 @@ pub async fn message_fixer(
                                 let mut message = msg.clone();
                                 match message.suppress_embeds(&ctx.http).await {
                                     Ok(_) => {
-                                        println!("[{}][handler]: Removed embed", caller);
+                                        println!("[{}][handler][{}]: Removed embed", caller, message.id.to_string());
                                     }
                                     Err(_) => {
-                                        eprintln!("[{}][handler]: Failed to remove, no perms", caller);
+                                        eprintln!("[{}][handler][{}]: Failed to remove, no perms", caller, message.id.to_string());
                                     }
                                 }
                             }
@@ -64,10 +64,10 @@ pub async fn message_fixer(
                                         let mut message = msg.clone();
                                         match message.suppress_embeds(&ctx.http).await {
                                             Ok(_) => {
-                                                println!("[{}][handler]: Removed embed", caller);
+                                                println!("[{}][handler][{}]: Removed embed", caller, message.id.to_string());
                                             }
                                             Err(_) => {
-                                                eprintln!("[{}][handler]: Failed to remove, no perms", caller);
+                                                eprintln!("[{}][handler][{}]: Failed to remove, no perms", caller, message.id.to_string());
                                             }
                                         }
                                     }

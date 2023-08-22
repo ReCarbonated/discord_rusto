@@ -26,7 +26,8 @@ pub async fn handler(ctx: &Context, msg: &Message) {
         Some(x) => match x.get(8) {
             Some(artwork_id) => {
                 println!(
-                    "[pixiv][handler] Found a regex match: {}",
+                    "[pixiv][handler][{}] Found a regex match: {}",
+                    msg.id.to_string(),
                     artwork_id.as_str()
                 );
                 let pixiv_client = {
@@ -105,10 +106,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                         let mut message = msg.clone();
                         match message.suppress_embeds(&ctx.http).await {
                             Ok(_) => {
-                                println!("[pixiv][handler]: Removed embed");
+                                println!("[pixiv][handler][{}]: Removed embed", message.id.to_string());
                             }
                             Err(_) => {
-                                eprintln!("[pixiv][handler]: Failed to remove, no perms");
+                                eprintln!("[pixiv][handler][{}]: Failed to remove, no perms", message.id.to_string());
                             }
                         }
                     }

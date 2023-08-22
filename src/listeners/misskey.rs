@@ -91,7 +91,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                             // If there is a value in videos list, assume it's all videos
                             if contains_video {
-                                println!("[misskey][handler]: Found Videos");
+                                println!("[misskey][handler][{}]: Found Videos", msg.id.to_string());
                                 for file in videos {
                                     // Just reply to poster with links to videos
                                     _res = &msg.reply(&ctx.http, file.url.clone()).await;
@@ -99,7 +99,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                             // If there's a value in image list, assume it's all images
                             } else if contains_image {
-                                println!("[misskey][handler]: Found Images");
+                                println!("[misskey][handler][{}]: Found Images", msg.id.to_string());
 
                                 // Build a message object to send to channel
                                 let _res = msg
@@ -160,19 +160,19 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 let mut message = msg.clone();
                                 match message.suppress_embeds(&ctx.http).await {
                                     Ok(_) => {
-                                        println!("[misskey][handler]: Removed embed");
+                                        println!("[misskey][handler][{}]: Removed embed", message.id.to_string());
                                     }
                                     Err(_) => {
-                                        eprintln!("[misskey][handler]: Failed to remove, no perms");
+                                        eprintln!("[misskey][handler][{}]: Failed to remove, no perms", message.id.to_string());
                                     }
                                 }
                             }
                         }
                         Err(err) => {
-                            eprintln!("[misskey][handler]: Error trying to read response: {}", err)
+                            eprintln!("[misskey][handler][{}]: Error trying to read response: {}", msg.id.to_string(), err)
                         }
                     },
-                    Err(err) => eprintln!("[misskey][handler]: Error trying to access api with id {} and with: {}", note_id.as_str(), err),
+                    Err(err) => eprintln!("[misskey][handler][{}]: Error trying to access api with id {} and with: {}", msg.id.to_string(), note_id.as_str(), err),
                 }
                 }
                 None => {

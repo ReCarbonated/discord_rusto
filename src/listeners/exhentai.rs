@@ -135,10 +135,10 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                         let mut message = msg.clone();
                         match message.suppress_embeds(&ctx.http).await {
                             Ok(_) => {
-                                println!("[exhentai][handler]: Removed embed");
+                                println!("[exhentai][handler][{}]: Removed embed", message.id.to_string());
                             }
                             Err(_) => {
-                                eprintln!("[exhentai][handler]: Failed to remove, no perms");
+                                eprintln!("[exhentai][handler][{}]: Failed to remove, no perms", message.id.to_string());
                             }
                         }
                     }
