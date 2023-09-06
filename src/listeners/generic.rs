@@ -3,6 +3,25 @@ use serenity::client::Context;
 use serenity::model::channel::Message;
 use tokio::time::{sleep, Duration};
 
+// pub struct Listener<C>{
+//     pub caller: C,
+//     pub name: String
+// }
+
+// impl<C> Listener<C>
+// where 
+//     C: Fn(&Context, &Message) -> dyn Future<Output = ()>
+// {
+//     pub fn new(func: C, name: String) -> Self {
+//         Listener { caller: func, name: name }
+//     }
+
+//     pub async fn parse(&self, ctx: &Context, msg: &Message) {
+//         (self.caller)(ctx, msg);
+//     }
+// }
+
+
 pub async fn message_fixer(
     ctx: &Context,
     msg: &Message,
@@ -39,14 +58,14 @@ pub async fn message_fixer(
                             // let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
 
                             if delete_embed {
-                                sleep(Duration::from_secs(2)).await;
+                                sleep(Duration::from_secs(3)).await;
                                 let mut message = msg.clone();
                                 match message.suppress_embeds(&ctx.http).await {
                                     Ok(_) => {
-                                        println!("[{}][handler][{}]: Removed embed", caller, message.id.to_string());
+                                        println!("[{}][handler][{}][{}]: Removed embed", caller, message.id.to_string(), "true");
                                     }
                                     Err(_) => {
-                                        eprintln!("[{}][handler][{}]: Failed to remove, no perms", caller, message.id.to_string());
+                                        eprintln!("[{}][handler][{}][{}]: Failed to remove, no perms", caller, message.id.to_string(), "true");
                                     }
                                 }
                             }
@@ -64,10 +83,10 @@ pub async fn message_fixer(
                                         let mut message = msg.clone();
                                         match message.suppress_embeds(&ctx.http).await {
                                             Ok(_) => {
-                                                println!("[{}][handler][{}]: Removed embed", caller, message.id.to_string());
+                                                println!("[{}][handler][{}][{}]: Removed embed", caller, message.id.to_string(), "false");
                                             }
                                             Err(_) => {
-                                                eprintln!("[{}][handler][{}]: Failed to remove, no perms", caller, message.id.to_string());
+                                                eprintln!("[{}][handler][{}][{}]: Failed to remove, no perms", caller, message.id.to_string(), "false");
                                             }
                                         }
                                     }

@@ -10,6 +10,7 @@ use serenity::{
 
 #[group]
 #[description= "A group of of commands that will extract emojis from something"]
+#[prefixes("emote", "em")]
 #[commands(emoji)]
 struct Emojis;
 

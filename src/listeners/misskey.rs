@@ -8,6 +8,8 @@ use tokio::time::{sleep, Duration};
 
 use crate::WebClient;
 
+// use super::generic::Listener;
+
 lazy_static! {
     static ref RE: Regex = Regex::new(
         r"(\|\|)?http(s)*:\/\/(www\.)?(mobile\.)?(misskey.io/notes/)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]{1,})(\?.*)?(\|\|)?"
@@ -186,3 +188,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
         }
     }
 }
+
+// pub fn construct() {
+//     let x = Listener::new(handler, "misskey".to_string());
+// }
