@@ -8,7 +8,7 @@ use serenity::model::channel::Message;
 use tokio::time::sleep;
 use crate::{
     types::{APIPayload, GalleryMetaDataList, Metatag},
-    WebClient,
+    WebClient, DbPool,
 };
 use url::Url;
 
@@ -62,7 +62,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
 
                         // Build embed now
 
-                        let _res = msg
+                        let res = msg
                             .channel_id
                             .send_message(&ctx.http, |m| {
                                 m.add_embed(|e| {
@@ -129,8 +129,23 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                     am
                                 });
                                 m
-                            })
-                        .await;
+                            }
+                        ).await;
+
+                        match res {
+                            Ok(sent_message) => {
+                                let pool = {
+                                    let data = ctx.data.read().await;
+                                    data.get::<DbPool>()
+                                    .expect("Expected WebClient in TypeMap")
+                                    .clone()
+                                };
+
+                                crate::helpers::sent_message_to_db(sent_message.id.as_u64(), msg.id.as_u64(), &pool).await;
+                            },
+                            Err(_) => {},
+                        }
+
                         sleep(Duration::from_secs(2)).await;
                         let mut message = msg.clone();
                         match message.suppress_embeds(&ctx.http).await {

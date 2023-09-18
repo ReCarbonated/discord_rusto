@@ -212,6 +212,31 @@ async fn insert_message(
     .unwrap();
 }
 
+pub async fn sent_message_to_db(message_id: &u64, ref_message_id: &u64, pool: &sqlx::MySqlPool) {
+    sqlx::query!(
+        "INSERT INTO SentMessages (message_id, referenced_id, create_time) VALUES (?, ?, ?)",
+        message_id,
+        ref_message_id,
+        sqlx::types::chrono::Utc::now(),
+    )
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
+pub async fn message_interacted_by_bot(message_id: &u64, pool: &sqlx::MySqlPool) -> Result<u64, sqlx::error::Error> {
+    let res = sqlx::query!(
+        "SELECT * FROM SentMessages WHERE referenced_id = ? LIMIT 1",
+        message_id
+    ).fetch_one(pool).await;
+
+    match res {
+        Ok(bot_msg) => Ok(bot_msg.message_id),
+        Err(err) => Err(err)
+    }
+
+}
+
 pub async fn parse_message(msg: &Message, ctx: &Context) {
     let user_id = msg.author.id.as_u64();
     let pool = {

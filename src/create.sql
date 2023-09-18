@@ -70,3 +70,12 @@ CREATE TABLE `Settings` (
 	`setting` JSON NOT NULL COMMENT 'JSON Payload',
 	PRIMARY KEY (`id`)
 );
+
+CREATE TABLE `SentMessages` (
+	`id` int NOT NULL AUTO_INCREMENT COMMENT 'Primary Key',
+	`message_id` bigint UNSIGNED NOT NULL COMMENT 'Message ID',
+	`referenced_id` bigint UNSIGNED NOT NULL COMMENT 'Ref Message ID',
+	`create_time` datetime COMMENT 'Discord Message Time',
+	PRIMARY KEY (`id`),
+	UNIQUE KEY (`referenced_id`)
+);

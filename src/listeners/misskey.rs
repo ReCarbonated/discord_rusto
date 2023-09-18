@@ -6,7 +6,7 @@ use serenity::model::channel::Message;
 use std::collections::HashMap;
 use tokio::time::{sleep, Duration};
 
-use crate::WebClient;
+use crate::{WebClient, DbPool};
 
 // use super::generic::Listener;
 
@@ -104,7 +104,7 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                 println!("[misskey][handler][{}]: Found Images", msg.id.to_string());
 
                                 // Build a message object to send to channel
-                                let _res = msg
+                                let res = msg
                                     .channel_id
                                     .send_message(&ctx.http, |m| {
                                         // construct new iter for images because of embed format
@@ -155,8 +155,22 @@ pub async fn handler(ctx: &Context, msg: &Message) {
                                             am
                                         });
                                         m
-                                    })
-                                    .await;
+                                    }
+                                ).await;
+
+                                match res {
+                                    Ok(sent_message) => {
+                                        let pool = {
+                                            let data = ctx.data.read().await;
+                                            data.get::<DbPool>()
+                                            .expect("Expected WebClient in TypeMap")
+                                            .clone()
+                                        };
+        
+                                        crate::helpers::sent_message_to_db(sent_message.id.as_u64(), msg.id.as_u64(), &pool).await;
+                                    },
+                                    Err(_) => {},
+                                }
 
                                 sleep(Duration::from_secs(5)).await;
                                 let mut message = msg.clone();

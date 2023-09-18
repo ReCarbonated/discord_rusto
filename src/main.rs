@@ -1,6 +1,6 @@
 use chrono_tz::US::Pacific;
 use dotenvy::dotenv;
-use serenity::model::prelude::{Guild, Channel, Reaction, Interaction, InteractionResponseType};
+use serenity::model::prelude::{Guild, Channel, Reaction, Interaction, InteractionResponseType, MessageId};
 
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -187,9 +187,22 @@ impl EventHandler for Handler {
         types::settings::upsert_guild_setting(ctx, guild, is_new).await;
     }
 
-    // async fn message_delete(&self, ctx: Context, channel_id: ChannelId, deleted_message: MessageId, _guild_id: Option<GuildId>) {
-    //     channel_id.message(&ctx.http, deleted_message).await.unwrap().
-    // }
+    async fn message_delete(&self, ctx: Context, channel_id: ChannelId, deleted_message: MessageId, _guild_id: Option<GuildId>) {
+        let pool = {
+            let data = ctx.data.read().await;
+            data.get::<DbPool>()
+            .expect("Expected WebClient in TypeMap")
+            .clone()
+        };
+
+        match crate::helpers::message_interacted_by_bot(deleted_message.as_u64(), &pool).await {
+            Ok(message_id) => {
+                println!("[message_delete][{}] Found message that the bot interacted with: {}", deleted_message, message_id);
+                let _res = channel_id.delete_message(ctx.http, message_id).await;
+            },
+            Err(_) => {}
+        }
+    }
 
     async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
         let message = reaction.message(&ctx.http).await.unwrap();

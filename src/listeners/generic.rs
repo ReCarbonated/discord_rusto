@@ -3,6 +3,8 @@ use serenity::client::Context;
 use serenity::model::channel::Message;
 use tokio::time::{sleep, Duration};
 
+use crate::DbPool;
+
 // pub struct Listener<C>{
 //     pub caller: C,
 //     pub name: String
@@ -53,7 +55,20 @@ pub async fn message_fixer(
                     );
                     match ignore_check {
                         true => {
-                            msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
+                            let res = msg.reply(&ctx.http, &rebuilt_url).await;
+                            match res {
+                                Ok(sent_message) => {
+                                    let pool = {
+                                        let data = ctx.data.read().await;
+                                        data.get::<DbPool>()
+                                        .expect("Expected WebClient in TypeMap")
+                                        .clone()
+                                    };
+    
+                                    crate::helpers::sent_message_to_db(sent_message.id.as_u64(), msg.id.as_u64(), &pool).await;
+                                },
+                                Err(_) => {},
+                            }
 
                             // let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
 
@@ -74,7 +89,20 @@ pub async fn message_fixer(
                             match check_if_embeded(ctx, msg.clone(), 3).await {
                                 true => {}
                                 false => {
-                                    msg.reply(&ctx.http, &rebuilt_url).await.unwrap();
+                                    let res = msg.reply(&ctx.http, &rebuilt_url).await;
+                                    match res {
+                                        Ok(sent_message) => {
+                                            let pool = {
+                                                let data = ctx.data.read().await;
+                                                data.get::<DbPool>()
+                                                .expect("Expected WebClient in TypeMap")
+                                                .clone()
+                                            };
+            
+                                            crate::helpers::sent_message_to_db(sent_message.id.as_u64(), msg.id.as_u64(), &pool).await;
+                                        },
+                                        Err(_) => {},
+                                    }
 
                                     // let _ = msg.channel_id.send_message(&ctx.http, |m| {m.content(&rebuilt_url)}).await;
 
