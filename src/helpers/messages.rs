@@ -268,16 +268,22 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
         insert_guild(guild_id.as_u64(), &pool).await;
     }
 
-    let re = Regex::new(r"<a?:\w*:(?P<id>\d*)>").unwrap();
+    let re = Regex::new(r"<(a?):\w*:(?P<id>\d*)>").unwrap();
 
     for cap in re.captures_iter(&msg.content) {
-        if let Some(id_str) = cap.get(1) {
+        if let Some(id_str) = cap.get(2) {
             let emote_id = id_str.as_str().parse::<u64>();
             match emote_id {
                 Ok(emote_id) => {
+                    let ext = {
+                        match cap.get(1) {
+                            Some(_) => "gif",
+                            None => "png",
+                        }
+                    };
                     insert_emote(&emote_id, &pool).await;
                     insert_message(channel_id, user_id, &emote_id, msg, &pool).await;
-                    match download_emote(&client, &emote_id).await {
+                    match download_emote(&client, &emote_id, ext).await {
                         Ok(_) => println!("Was ok in downloading emote"),
                         Err(_) => println!("Was not ok in downloading emote"),
                     }
@@ -296,13 +302,13 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
     }
 }
 
-async fn download_emote(client: &Client, sticker_id: &u64) -> Result<()> {
-    let filename = format!("/emote/{}.webp", sticker_id);
+async fn download_emote(client: &Client, emote_id: &u64, ext: &str) -> Result<()> {
+    let filename = format!("/emote/{}.{}", emote_id, ext);
     match Path::new(&filename).exists() {
         true => {},
         false => {
             let mut out = File::create(filename)?;
-            let url = format!("https://cdn.discordapp.com/emojis/{}.webp", sticker_id);
+            let url = format!("https://cdn.discordapp.com/emojis/{}.{}", emote_id, ext);
             let resp = fetch_bytes(client, url.as_str()).await?;
             out.write_all(&resp)?;
         },
