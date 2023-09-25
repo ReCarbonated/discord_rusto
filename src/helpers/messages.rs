@@ -1,7 +1,12 @@
 use regex::Regex;
+use reqwest::Client;
 use serenity::{model::prelude::Message, prelude::Context};
+use std::io::Write;
+use std::fs::File;
+use anyhow::Result;
+use std::path::Path;
 
-use crate::DbPool;
+use crate::{DbPool, WebClient};
 
 async fn insert_user(user_id: &u64, pool: &sqlx::MySqlPool) {
     sqlx::query!(
@@ -224,7 +229,7 @@ pub async fn sent_message_to_db(message_id: &u64, ref_message_id: &u64, pool: &s
     .unwrap();
 }
 
-pub async fn message_interacted_by_bot(message_id: &u64, pool: &sqlx::MySqlPool) -> Result<u64, sqlx::error::Error> {
+pub async fn message_interacted_by_bot(message_id: &u64, pool: &sqlx::MySqlPool) -> sqlx::Result<u64> {
     let res = sqlx::query!(
         "SELECT * FROM SentMessages WHERE referenced_id = ? LIMIT 1",
         message_id
@@ -245,6 +250,15 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
             .get::<DbPool>()
             .expect("Expected DbPool in TypeMap").clone()
     };
+
+    let client = {
+        let data = ctx.data.read().await;
+        data
+            .get::<WebClient>()
+            .expect("Expected DbPool in TypeMap").clone()
+    };
+
+
     insert_user(user_id, &pool).await;
 
     let channel_id = msg.channel_id.as_u64();
@@ -263,6 +277,10 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
                 Ok(emote_id) => {
                     insert_emote(&emote_id, &pool).await;
                     insert_message(channel_id, user_id, &emote_id, msg, &pool).await;
+                    match download_emote(&client, &emote_id).await {
+                        Ok(_) => println!("Was ok in downloading emote"),
+                        Err(_) => println!("Was not ok in downloading emote"),
+                    }
                 }
                 Err(_error) => {}
             }
@@ -276,4 +294,30 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
             insert_sticker_use(channel_id, user_id, sticker_id, msg, &pool).await;
         }
     }
+}
+
+async fn download_emote(client: &Client, sticker_id: &u64) -> Result<()> {
+    let filename = format!("/emote/{}.webp", sticker_id);
+    match Path::new(&filename).exists() {
+        true => {},
+        false => {
+            let mut out = File::create(filename)?;
+            let url = format!("https://cdn.discordapp.com/emojis/{}.webp", sticker_id);
+            let resp = fetch_bytes(client, url.as_str()).await?;
+            out.write_all(&resp)?;
+        },
+    }
+    Ok(())
+}
+
+async fn fetch_bytes(client: &Client, url: &str) -> Result<Vec<u8>> {
+    let data = client
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .bytes()
+        .await?;
+
+    Ok(data.to_vec())
 }
