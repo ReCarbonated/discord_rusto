@@ -290,7 +290,12 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
                     insert_message(channel_id, user_id, &emote_id, msg, &pool).await;
                     match download_emote(&client, &emote_id, ext).await {
                         Ok(_) => println!("Was ok in downloading emote"),
-                        Err(_) => println!("Was not ok in downloading emote"),
+                        Err(_) => {
+                            match download_emote(&client, &emote_id, "webp").await {
+                                Ok(_) => println!("Was ok in downloading emote in webp version"),
+                                Err(_) => println!("Failed even downloading webp version"),
+                            }
+                        },
                     }
                 }
                 Err(_error) => {}
