@@ -308,8 +308,8 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
 }
 
 async fn download_emote(client: &Client, emote_id: &u64, ext: &str) -> Result<()> {
-    // let filename = format!("/emote/{}.{}", emote_id, ext);
-    let filename = format!("/home/carbon/emote/{}.{}", emote_id, ext);
+    let filename = format!("/emote/{}.{}", emote_id, ext);
+    // let filename = format!("/home/carbon/emote/{}.{}", emote_id, ext);
     println!("{}", filename);
     match Path::new(&filename).exists() {
         true => {},
