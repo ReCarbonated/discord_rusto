@@ -277,7 +277,12 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
                 Ok(emote_id) => {
                     let ext = {
                         match cap.get(1) {
-                            Some(_) => "gif",
+                            Some(contains) => {
+                                match contains.is_empty() {
+                                    true => {"png"},
+                                    false => {"gif"},
+                                }
+                            },
                             None => "png",
                         }
                     };
@@ -303,12 +308,15 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
 }
 
 async fn download_emote(client: &Client, emote_id: &u64, ext: &str) -> Result<()> {
-    let filename = format!("/emote/{}.{}", emote_id, ext);
+    // let filename = format!("/emote/{}.{}", emote_id, ext);
+    let filename = format!("/home/carbon/emote/{}.{}", emote_id, ext);
+    println!("{}", filename);
     match Path::new(&filename).exists() {
         true => {},
         false => {
             let mut out = File::create(filename)?;
             let url = format!("https://cdn.discordapp.com/emojis/{}.{}", emote_id, ext);
+            println!("{}", url);
             let resp = fetch_bytes(client, url.as_str()).await?;
             out.write_all(&resp)?;
         },
