@@ -55,6 +55,7 @@ pub async fn message_fixer(
                     );
                     match ignore_check {
                         true => {
+                            print!("{}", rebuilt_url);
                             let res = msg.reply(&ctx.http, &rebuilt_url).await;
                             match res {
                                 Ok(sent_message) => {
