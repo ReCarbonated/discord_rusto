@@ -308,7 +308,10 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
         {
             insert_sticker(sticker_id, &pool).await;
             insert_sticker_use(channel_id, user_id, sticker_id, msg, &pool).await;
-            download_sticker(&client, sticker).await;
+            match download_sticker(&client, sticker).await {
+                Ok(_) => println!("Was ok in downloading sticker"),
+                Err(_) => println!("Failed in downloading sticker")
+            }
         }
     }
 }
