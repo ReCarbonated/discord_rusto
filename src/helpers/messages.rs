@@ -1,6 +1,6 @@
 use regex::Regex;
 use reqwest::Client;
-use serenity::{model::prelude::Message, prelude::Context};
+use serenity::{model::{prelude::Message, sticker::StickerItem,}, prelude::Context};
 use std::io::Write;
 use std::fs::File;
 use anyhow::Result;
@@ -308,6 +308,7 @@ pub async fn parse_message(msg: &Message, ctx: &Context) {
         {
             insert_sticker(sticker_id, &pool).await;
             insert_sticker_use(channel_id, user_id, sticker_id, msg, &pool).await;
+            download_sticker(&client, sticker).await;
         }
     }
 }
@@ -324,6 +325,26 @@ async fn download_emote(client: &Client, emote_id: &u64, ext: &str) -> Result<()
             println!("{}", url);
             let resp = fetch_bytes(client, url.as_str()).await?;
             out.write_all(&resp)?;
+        },
+    }
+    Ok(())
+}
+
+async fn download_sticker(client: &Client, sticker: &StickerItem) -> Result<()> {
+    let filename = format!("/emote/sticker/{}.{}", sticker.id.as_u64(), "png");
+    // let filename = format!("/home/carbon/emote/{}.{}", sticker_id, ext);
+    println!("{}", filename);
+    match Path::new(&filename).exists() {
+        true => {},
+        false => {
+            match sticker.image_url() {
+                Some(url) => {
+                    let mut out = File::create(filename)?;
+                    let resp = fetch_bytes(client, &url).await?;
+                    out.write_all(&resp)?;
+                },
+                None => {},
+            }
         },
     }
     Ok(())
