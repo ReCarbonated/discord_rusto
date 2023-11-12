@@ -49,15 +49,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  clean-ghcr:
-    name: Delete old unused container images
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete old images
-        uses: snok/container-retention-policy@v2
+      - name: Delete all owner containers without tags
+        uses: Chizkiyahu/delete-untagged-ghcr-action@v3
         with:
-          image-names: discord-rusto
-          cut-off: One month ago UTC
-          keep-at-least: 1
-          account-type: personal
-          token: ${{ secrets.PAT }}
+            token: ${{ secrets.PAT }}
+            repository_owner: ${{ github.repository_owner }}
+            owner_type: user
